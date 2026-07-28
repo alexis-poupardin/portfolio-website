@@ -1,0 +1,796 @@
+/* ------------------- global architecture and recurrent variables ----------------- */
+
+:root {
+    --color-bg: #f7f7f2;
+    --color-dark: #283138;
+    --color-accent: #84a98c;
+    --color-sand: #e8ddc7;
+    --color-sand-alpha: rgba(232, 221, 199, 0.85);
+    --color-grey: #5b6770; 
+    --color-shadow1:0 8px 32px rgba(40, 49, 56, 0.08); /* nav bar main */
+    --color-shadow2:0 12px 24px rgba(0, 0, 0, 0.1); /* nav bar sub */
+    --color-shadow3: 0 0 0 3px rgba(132, 169, 140, 0.25); /* language switcher */
+    --color-shadow4:0 4px 6px rgba(40, 49, 56, 0.2); /* images */
+    
+    /* Smooth transitions for interactive elements */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* ---------------------- scrolling -------------- */
+
+/* smooth scrolling when visitors click the back-to-top arrow */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-sand);
+    border-radius: 5px;
+    border: 2px solid var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+}
+
+body {
+    background: var(--color-bg);
+    font-family: "Montserrat", "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    color: var(--color-dark);
+    line-height: 1.6;
+    overflow-x: hidden; 
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+
+}
+
+/* --------------------- header and branding ---------------------------- */
+
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1rem;
+    width: 100%;
+}
+
+.header-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0 1rem; 
+}
+
+.logo-HB {
+    margin-top: 1rem;
+}
+
+.logo-HB img {
+    width: 100%;
+    max-width: 150px;
+    height: auto;
+}
+
+.website-heading {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+
+/* ------------------------------ Navigation bar ----------------------------- */
+
+
+.navigation {
+    position: sticky; /* Container sticking to top of screen on scroll */
+    top: 1rem; /* Gap from the top edge when scrolling */
+    z-index: 1000; /* Keeps nav floating above all page content */
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+
+.navigation ul {
+    display: flex;
+    list-style: none;
+    align-items: center;
+    gap: 1.5rem; 
+    padding: 0.8rem 1.8rem;
+    border-radius: 50px;
+    
+    /* ---  GLASS EFFECT --- */
+    
+    background: rgba(232, 221, 199, 0.75); 
+    
+    /* Blurs content scrolling underneath */
+    -webkit-backdrop-filter: blur(12px); /* Safari support */
+    backdrop-filter: blur(12px);
+    
+    /* Subtle white edge highlight for glass depth */
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    
+    /* Soft shadow to elevate glass off the page background */
+    box-shadow:var(--color-shadow1);
+    
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.navigation > nav > ul > li {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.navigation li {
+    position: relative;
+}
+
+/* Invisible structural bridge to dropdown preventing hover gaps */
+.navigation li::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    height: 8px;
+}
+
+/* Navigation Link Styling */
+.navigation a {
+    position: relative; /* Required for pseudo-element underline */
+    text-decoration: none;
+    color: var(--color-dark);
+    font-weight: 600;
+    transition: var(--transition-smooth);
+}
+
+/* Hover underline effect */
+.navigation a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -4px;
+    left: 50%;
+    background-color: var(--color-accent);
+    transition: var(--transition-smooth);
+    transform: translateX(-50%);
+}
+
+.navigation a:hover::after {
+    width: 60%;
+}
+
+.navbar-icons {
+    width: 28px;
+    height: auto;
+    display: block;
+}
+
+/* Submenu Dropdown Container (Matching Frosted Glass Style) */
+.navigation li ul {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: column;
+    gap: 0;
+    list-style: none;
+    
+    /* Frosted glass styling matching main pill */
+    background: rgba(232, 221, 199, 0.88);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    
+    border-radius: 12px;
+    width: max-content;
+    min-width: unset;
+    padding: 6px 0;
+    box-shadow: var(--color-shadow2);
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.navigation li:hover > ul {
+    display: flex;
+}
+
+.navigation li ul a {
+    display: block;
+    padding: 0.7rem 1.4rem;
+}
+
+.navigation li ul a::after {
+    bottom: 4px; 
+}
+
+.navigation li ul a:hover::after {
+    width: 40%;
+}
+
+/* -------------------------- main ---------------------- */
+
+
+main {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;  
+    width: 100%;           
+    padding: 1rem 1rem 3rem 1rem;
+    flex: 1; /* Keeps footer pushed to the bottom of the screen */
+}
+
+
+/* --------------------- language switcher -------------------------- */
+
+.language-switcher {
+    position: absolute;
+    top: 1.5rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 1100;
+}
+
+/* Dropdown Chevron Icon */
+.language-switcher::after {
+    content: "⌄";
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-60%);
+    color: var(--color-dark);
+    pointer-events: none;
+}
+
+.language-switcher label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-dark);
+}
+
+.language-switcher select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 0.35rem 1.5rem 0.35rem 0.8rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-sand);
+    border-radius: 20px;
+    color: var(--color-dark);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.language-switcher select:hover {
+    border-color: var(--color-accent);
+    background: #ffffff;
+}
+
+.language-switcher select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: var(--color-shadow3);
+}
+
+/* ------------------------ footer -------------------------------- */
+
+footer {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: var(--color-accent);
+    border-top: 2px solid var(--color-dark);
+    margin-top: auto;
+}
+
+.footer-text {
+    display: flex;
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 0.3rem;     
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.hypertext-link {
+    display: inline-block;
+    position: relative;
+    font-weight: bold;
+    text-decoration: none;
+    color: inherit;
+}
+
+.hypertext-link:visited {
+    color: inherit;
+}
+
+.top-button {
+    justify-self: center;
+    display: flex;
+    align-items: center;
+}
+
+.footer-icons {
+    width: 38px;
+    height: auto;
+    stroke: var(--color-dark);
+    transition: var(--transition-smooth);
+}
+
+.footer-icons:hover {
+    transform: translateY(-6px); 
+}
+
+/* --------------------- mobile devices optimisation --------------------------- */
+
+/* Tablet & Smaller Devices (Max Width: 768px) */
+@media (max-width: 768px) {
+    .language-switcher {
+        position: static;
+        margin: 1rem auto 0 auto;
+        justify-content: center;
+    }
+    
+    header {
+        padding-top: 1rem;
+    }
+    
+    .navigation {
+        margin-top: 1.5rem;
+    }
+}
+
+/* Mobile Smartphones (Max Width: 600px) */
+@media (max-width: 600px) {
+
+    footer {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+    
+    .footer-text, .top-button {
+        justify-self: center;
+    }
+    
+    .navigation ul {
+        border-radius: 20px;
+        padding: 0.8rem;
+        gap: 1rem;
+    }
+    
+    .navigation li ul {
+        position: static;
+        transform: none;
+        width: 100%;
+        box-shadow: none;
+        background: rgba(0,0,0,0.03);
+        margin-top: 0.5rem;
+    }
+}
+
+
+
+
+/* -------------- Article styling (with transition) ------------------- */
+
+/* Keyframe animation for smooth fade-in and subtle upward movement */
+@keyframes fadeInSection {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.article-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    max-width: 1200px; 
+    margin: 2rem auto 2rem auto;
+    padding: 0 2.5rem;
+    width: 100%; 
+    scroll-margin-top: 110px;
+}
+
+.article-section .title-1 {
+    font-size: clamp(1.8rem, 4vw, 2.4rem); 
+    color: var(--color-dark);
+    padding-top: 0rem;
+    margin-bottom: 2rem;
+    text-align: left;
+    width: 100%; 
+    padding-left: 0.5rem; 
+    opacity: 0;
+    animation: fadeInSection 0.6s ease-out 0.2s forwards;
+}
+
+/* Article Box */
+.article-section .article-text {
+    border: 1px solid var(--color-dark); 
+    padding: 2rem; 
+    border-radius: 12px; 
+    background: var(--color-sand); 
+    width: 100%; 
+    opacity: 0;
+    animation: fadeInSection 0.6s ease-out 0.4s forwards;
+}
+
+/* Paragraph spacing inside article-text */
+.article-text p {
+    margin-bottom: 1rem;
+    color: var(--color-dark);
+}
+
+/* Removes the margin from the very last paragraph so the box padding stays even */
+.article-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* still useful ???? */
+.article-section {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+    opacity: 0;
+    animation: fadeInSection 0.6s ease-out 0.6s forwards;
+}
+
+/* ------------- image (sizing + transition + caption) ----------------- */
+
+
+/* Wrapper handles the page load animation */
+.image-wrapper {
+    width: 100%;
+    max-width: clamp(100px, 80vw, 800px);
+    margin: 2rem auto 0 auto;
+    opacity: 0;
+    animation: fadeInSection 0.6s ease-out 0.6s forwards;
+}
+
+/* Image handles sizing & hover interaction */
+.images {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: var(--transition-smooth);
+    cursor: pointer;
+}
+
+
+
+.images:hover {
+    transform: translateY(-4px);
+    filter: drop-shadow(var(--color-shadow4)); 
+}
+
+/* Styling for image captions */
+.caption {
+    /* 1. Distance between the image above and this caption */
+    margin-top: 0.75rem; 
+    /* 2. Distance between this caption and the picture/content below it */
+    margin-bottom: 3rem; 
+    /* Typography & aesthetics */
+    text-align: center;       /* Centers the caption beneath the image */
+    font-size: 0.9rem;        
+    font-style: italic;       
+    color: var(--color-dark);
+    font-style: italic;
+}
+
+/* --------------------- JS lightbox images --------------------*/
+
+.lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(40, 49, 56, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    cursor: default;
+}
+
+.lightbox.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Lightbox Frame */
+.lightbox-content {
+    background: var(--color-bg);
+    border: 2px solid var(--color-dark);
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 90vw;
+    max-height: 90vh;
+    position: relative;
+    display: inline-block;
+    flex-direction: column;
+    align-items: center;
+    cursor: default;
+}
+
+
+/* Enlarged Image inside Lightbox */
+#lightbox-img {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 6px;
+    cursor: default;
+}
+
+/* Caption inside Lightbox */
+.lightbox-caption {
+    margin-top: 1rem;
+    color: var(--color-dark);
+    font-style: italic;
+    text-align: center;
+}
+
+/* Close Button */
+.lightbox-close {
+    position: absolute;
+    top: -3px;
+    right: -1px;
+    z-index: 10;
+    font-size: 2.5rem;
+    color: #fff;
+    cursor: pointer;
+    color: var(--color-dark, #fff);
+    line-height: 1;
+    cursor: pointer;
+}
+
+
+
+
+
+
+/* ------------------- software logos SVG ----------------------- */
+
+.software-links {
+    display: flex;
+    flex-wrap: wrap;         /* Allows logos to wrap onto a new line on small mobile screens */
+    align-items: center;     /* Keeps logos aligned vertically */
+    gap: 1.5rem;             /* Adjust this value to increase or decrease space between logos */
+}
+
+.external-logos {
+    display: inline-block;
+    position: relative;
+}
+
+.external-logos::after {
+    content: attr(aria-label); /* Pulls the text dynamically from aria-label="QGIS" */
+    position: absolute;
+    bottom: 125%;              /* Places the tooltip above the icon */
+    left: 50%;
+    transform: translateX(-50%); /* Centers the tooltip horizontally */
+    
+    /* Styling for the tooltip box */
+    background-color: var(--color-dark, #283138);
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    
+    /* Hiding state by default */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;      /* Prevents hovering the tooltip itself from interfering */
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Tooltip arrow pointing down */
+.external-logos::before {
+    content: '';
+    position: absolute;
+    bottom: 105%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--color-dark, #283138) transparent transparent transparent;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+}
+
+/* Hover state: Reveal both the tooltip and arrow */
+.external-logos:hover::after,
+.external-logos:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.external-logos svg,
+.external-logos img {
+    width: clamp(32px, 5vw, 45px); 
+    height: auto;
+    display : block;
+    transition: var(--transition-smooth); 
+}
+
+/* Fill property specifically for SVGs */
+.external-logos svg {
+    fill: var(--color-dark);
+}
+
+.external-logos:hover svg,
+.external-logos:hover img {
+    transform: translateY(-4px);
+    filter: drop-shadow(var(--color-shadow4)); 
+}
+
+
+
+
+/* ------------------- software logos IMG ----------------------- */
+
+
+.external-logos img {
+    width: clamp(32px, 5vw, 45px); 
+    height: auto;
+    transition: var(--transition-smooth); 
+}
+
+.external-logos img:hover {
+    transform: translateY(-4px);
+    filter: drop-shadow(var(--color-shadow4)); 
+}
+
+
+
+
+
+/* ------------------ contact section ---------------- */
+
+
+/* Main outer container for the contact section */
+.contact-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 680px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+    text-align: center;
+}
+
+/* Fluid responsive section header */
+.contact-title {
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    color: var(--color-dark);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Standalone contact card container */
+.contact-card {
+    width: 100%;
+    background-color: var(--color-sand); 
+    border: 1px solid var(--color-dark);
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+/* Paragraph text inside the card */
+.contact-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin: 0;
+}
+
+/* Wrapper for interactive links */
+.contact-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+/* Interactive button style */
+.contact-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1.4rem;
+    background-color: #ffffff;
+    border: 1px solid var(--color-sand);
+    border-radius: 30px;
+    color: var(--color-dark);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: var(--transition-smooth);
+}
+
+/* LinkedIn icon sizing */
+.Linkedin-icon {
+    width: 22px;
+    height: 22px;
+    fill: var(--color-dark);
+    transition: var(--transition-smooth);
+}
+
+/* Text label within the button */
+.Linkedin-button-text {
+    line-height: 1;
+}
+
+/* Hover effect for the button */
+.contact-button:hover {
+    background-color: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+}
+
+.contact-button:hover .Linkedin-icon {
+    fill: #ffffff;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .contact-card {
+        padding: 1.5rem 1.25rem;
+    }
+    
+    .contact-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
