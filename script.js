@@ -86,10 +86,3 @@ function smoothScrollTo(element, duration = 1000) {
     requestAnimationFrame(animation);
 }
 
-
-
-// ---------------- language switcher --------------- //
-
-document.getElementById('language').addEventListener('change', (e) => {
-    window.location.href = e.target.value;
-});
