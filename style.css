@@ -597,7 +597,7 @@ footer {
     flex-wrap: wrap;         /* Allows logos to wrap onto a new line on small mobile screens */
     align-items: center;     /* Keeps logos aligned vertically */
     gap: 1.5rem;             /* Adjust this value to increase or decrease space between logos */
-    margin-top: 2rem; /* Space above the logos */
+    margin-top: 2.5rem; /* Space above the logos */
 }
 
 .external-logos {
