@@ -2,6 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const lightbox = document.getElementById('global-lightbox');
+    if (!lightbox) return;
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxCaption = document.getElementById('lightbox-caption');
     const closeBtn = document.querySelector('.lightbox-close');
