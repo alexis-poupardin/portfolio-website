@@ -1,0 +1,138 @@
+
+/* -------------------- Disyplaying rules (specific to index) ----------------- */
+
+
+/* Keyframe for the gradual opacity fade and subtle upward motion */
+@keyframes fadeDissolve {
+    0% {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Set initial hidden state and attach animation settings */
+.logo-HB,
+.homepage-text,
+.main-headings,
+.language-switcher,
+.navigation,
+.motto,
+footer {
+    opacity: 0; /* Keeps elements hidden until their delay starts */
+    animation: fadeDissolve 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* STAGE 1: Logo + Homepage Text (Simultaneous) */
+.logo-HB, 
+.homepage-text {
+    animation-delay: 0.2s;
+}
+
+/* STAGE 2: Main Headings */
+.main-headings {
+    animation-delay: 1s;
+}
+
+/* STAGE 3: Language Switcher */
+.language-switcher {
+    animation-delay: 1s;
+}
+
+/* STAGE 4: Motto */
+.motto {
+    animation-delay: 1s;
+}
+
+/* STAGE 4: Navigation Bar */
+.navigation {
+    animation-delay: 1s;
+}
+
+/* STAGE 5: Footer */
+footer {
+    animation-delay: 1s;
+}
+
+
+
+/* -------------------- header and branding (specific rules) ----------------- */
+
+
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 1rem;
+    width: 100%;
+}
+
+.header-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0 1rem; 
+}
+
+.logo-HB {
+    margin-top: 1rem;
+}
+
+.logo-HB img {
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+}
+
+.main-headings {
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+
+.motto {
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    font-weight: 500;
+    color: var(--color-accent);
+    margin-top: 0.3rem;
+}
+
+
+
+/* ------------------------ homepage (specific to index) ----------------- */ 
+
+
+.homepage-main {
+    justify-content: flex-start;
+    padding-top: 1.5rem;
+}
+
+.homepage-text {
+    text-align: center;
+    margin-top: 5rem;
+}
+
+#my-name {
+    font-size: clamp(2rem, 4vw, 5rem);
+}
+
+#welcome-text {
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    color: #5b6770; 
+}
+
+/* Decorative Framing Lines */
+.homepage-text::before,
+.homepage-text::after {
+    content: "";
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-sand), transparent);
+    margin: 1.5rem auto;
+}

@@ -235,7 +235,7 @@ main {
     align-items: center;  
     width: 100%;           
     padding: 1rem 1rem 3rem 1rem;
-    flex: 1; /* Keeps footer pushed to the bottom of the screen */
+    flex: 1; 
 }
 
 
@@ -342,6 +342,10 @@ footer {
 
 .footer-icons:hover {
     transform: translateY(-6px); 
+}
+
+#footer-placeholder {
+    display: contents;
 }
 
 /* --------------------- mobile devices optimisation --------------------------- */
