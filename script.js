@@ -42,6 +42,101 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+
+// ------------------- map carousel lightbox ----------------- //
+
+document.addEventListener('DOMContentLoaded', () => {
+    const carousel = document.getElementById('map-carousel');
+    if (!carousel) return; // this page has no map carousel, stop here
+
+    const carouselImg = document.getElementById('map-carousel-img');
+    const mapCaption = document.getElementById('map-caption');
+    const closeBtn = carousel.querySelector('.map-carousel-close');
+    const prevBtn = carousel.querySelector('.map-carousel-prev');
+    const nextBtn = carousel.querySelector('.map-carousel-next');
+
+    // The set of images currently being browsed (all the .map images that
+    // share the .map-wrapper the user clicked into), and which one is active
+    let currentSlides = [];
+    let currentIndex = 0;
+
+    // Displays the slide at "index", wrapping around at both ends
+    function showSlide(index) {
+        currentIndex = (index + currentSlides.length) % currentSlides.length;
+        const activeImg = currentSlides[currentIndex];
+
+        // 1. Copy image source and alt text to the popup
+        carouselImg.src = activeImg.src;
+        carouselImg.alt = activeImg.alt;
+
+        // 2. Each map image is immediately followed by its own <p class="caption">
+        const caption = activeImg.nextElementSibling;
+        mapCaption.textContent = (caption && caption.classList.contains('caption'))
+            ? caption.textContent
+            : '';
+
+        // 3. No point showing arrows when there is nothing else to browse to
+        const hasMultiple = currentSlides.length > 1;
+        prevBtn.style.display = hasMultiple ? '' : 'none';
+        nextBtn.style.display = hasMultiple ? '' : 'none';
+    }
+
+    // Add click event to every image with class "map", grouped by wrapper
+    document.querySelectorAll('.map-wrapper').forEach(wrapper => {
+        const slides = Array.from(wrapper.querySelectorAll('.map'));
+
+        slides.forEach(img => {
+            img.addEventListener('click', () => {
+                // a. This image's siblings become the carousel's slide set
+                currentSlides = slides;
+
+                // b. Show the clicked image first
+                showSlide(slides.indexOf(img));
+
+                // c. Display the popup
+                carousel.classList.add('active');
+            });
+        });
+    });
+
+    // Previous / next slide
+    prevBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // don't let the click reach the close handler below
+        showSlide(currentIndex - 1);
+    });
+
+    nextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showSlide(currentIndex + 1);
+    });
+
+    // Close popup on clicking the 'X' or outside the image container
+    carousel.addEventListener('click', (e) => {
+        if (e.target === carousel || e.target === closeBtn) {
+            carousel.classList.remove('active');
+        }
+    });
+
+    // Keyboard navigation: Escape closes, left/right arrows browse.
+    // Guarded by .active so these keys stay silent while the popup is closed.
+    document.addEventListener('keydown', (e) => {
+        if (!carousel.classList.contains('active')) return;
+
+        if (e.key === 'Escape') {
+            carousel.classList.remove('active');
+        } else if (e.key === 'ArrowLeft') {
+            showSlide(currentIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+            showSlide(currentIndex + 1);
+        }
+    });
+});
+
+
+
+
+
 // ---------------- autoscrolling to <section class="article-section"> ------------- //
 
 document.addEventListener('DOMContentLoaded', () => {

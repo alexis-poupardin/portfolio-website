@@ -580,7 +580,52 @@ footer {
 
 
 
+/* --------------------- JS map carousel --------------------*/
 
+#map-carousel-img {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 6px;
+    cursor: default;
+}
+
+/* Bottom bar: prev arrow — caption — next arrow, side by side,
+   taking over the strip the simple lightbox's caption had alone */
+.map-carousel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+#map-caption {
+    flex: 1;
+    margin: 0;
+    color: var(--color-dark);
+    font-style: italic;
+    text-align: center;
+}
+
+.map-carousel-arrow {
+    flex-shrink: 0;
+    font-size: 1.8rem;
+    color: var(--color-dark);
+    cursor: pointer;
+    line-height: 1;
+    user-select: none;
+    transition: var(--transition-smooth);
+}
+
+/* Nudge each arrow a little further in the direction it navigates */
+.map-carousel-prev:hover {
+    transform: translateX(-6px);
+}
+
+.map-carousel-next:hover {
+    transform: translateX(6px);
+}
 
 
 /* ------------------- software logos SVG ----------------------- */
