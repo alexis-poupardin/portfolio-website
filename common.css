@@ -365,6 +365,11 @@ footer {
     .navigation {
         margin-top: 1.5rem;
     }
+
+       .map-mosaic {
+        column-count: 2;
+        column-width: 160px;
+    }
 }
 
 /* Mobile Smartphones (Max Width: 600px) */
@@ -395,9 +400,41 @@ footer {
         background: rgba(0,0,0,0.03);
         margin-top: 0.5rem;
     }
+
+    .map-mosaic {
+        column-count: 1;
+    }
+
+    .map-wrapper {
+        max-height: 60vh;
+    }
+
+    .lightbox-content {
+        padding: 1rem;
+    }
+
+    .map-carousel-arrow {
+        font-size: 1.5rem;
+    }
 }
 
 
+@media (hover: none), (pointer: coarse) {
+    .map-tile .caption {
+        position: static;
+        display: block;
+        opacity: 1;
+        background: none;
+        color: var(--color-dark);
+        font-size: 0.85rem;
+        text-align: center;
+        padding: 0.5rem 0.25rem 0;
+    }
+
+    .map-tile:active .map {
+        transform: scale(0.98); /* small tap feedback instead of a hover effect */
+    }
+}
 
 
 /* -------------- Article styling (with transition) ------------------- */
@@ -576,6 +613,75 @@ footer {
     color: var(--color-dark, #fff);
     line-height: 1;
     cursor: pointer;
+}
+
+
+
+/* --------------------- map mosaic (thumbnails) --------------------*/
+
+/* Outer scroll area — matches the width of .article-text.
+   Plain block box on purpose: see note above on why the scrolling
+   container can't be the multi-column element itself. */
+.map-wrapper {
+    width: 100%;
+    max-height: 70vh;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.5rem; /* keeps the scrollbar off the images */
+}
+
+/* Inner multi-column mosaic — auto height, free to grow as tall as its
+   balanced columns need; the wrapper above handles the clipping/scroll */
+.map-mosaic {
+    column-count: 3;
+    column-width: 220px;
+    column-gap: 1rem;
+}
+
+/* Each tile: image + its caption overlay, self-contained */
+.map-tile {
+    position: relative;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.map-tile .map {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: var(--transition-smooth);
+}
+
+/* Caption + dark scrim, on top of the image, hidden until revealed */
+.map-tile .caption {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    margin: 0;
+    padding: 1rem;
+    color: #fff;
+    font-style: italic;
+    font-size: 0.9rem;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: var(--transition-smooth);
+}
+
+/* Only reveal on hover for devices with a real pointer (mouse/trackpad) */
+@media (hover: hover) and (pointer: fine) {
+    .map-tile:hover .caption {
+        opacity: 1;
+    }
+
+    .map-tile:hover .map {
+        transform: scale(1.05);
+        filter: drop-shadow(var(--color-shadow4));
+    }
 }
 
 

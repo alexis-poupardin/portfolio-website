@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!lightbox) return;
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxCaption = document.getElementById('lightbox-caption');
-    const closeBtn = document.querySelector('.lightbox-close');
+    const closeBtn = lightbox.querySelector('.lightbox-close');
 
     // Add click event to every image with class "images"
     document.querySelectorAll('.images').forEach(img => {
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// ------------------- map carousel lightbox ----------------- //
+// ------------------- map mosaic + carousel ----------------- //
 
 document.addEventListener('DOMContentLoaded', () => {
     const carousel = document.getElementById('map-carousel');
@@ -56,45 +56,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const prevBtn = carousel.querySelector('.map-carousel-prev');
     const nextBtn = carousel.querySelector('.map-carousel-next');
 
-    // The set of images currently being browsed (all the .map images that
-    // share the .map-wrapper the user clicked into), and which one is active
-    let currentSlides = [];
+    // The tiles currently being browsed (all .map-tile elements that share
+    // the .map-wrapper the visitor clicked into), and which one is active
+    let currentTiles = [];
     let currentIndex = 0;
 
-    // Displays the slide at "index", wrapping around at both ends
+    // Displays the tile at "index", wrapping around at both ends
     function showSlide(index) {
-        currentIndex = (index + currentSlides.length) % currentSlides.length;
-        const activeImg = currentSlides[currentIndex];
+        currentIndex = (index + currentTiles.length) % currentTiles.length;
+        const tile = currentTiles[currentIndex];
+        const img = tile.querySelector('.map');
+        const caption = tile.querySelector('.caption');
 
-        // 1. Copy image source and alt text to the popup
-        carouselImg.src = activeImg.src;
-        carouselImg.alt = activeImg.alt;
+        carouselImg.src = img.src;
+        carouselImg.alt = img.alt;
+        mapCaption.textContent = caption ? caption.textContent : '';
 
-        // 2. Each map image is immediately followed by its own <p class="caption">
-        const caption = activeImg.nextElementSibling;
-        mapCaption.textContent = (caption && caption.classList.contains('caption'))
-            ? caption.textContent
-            : '';
-
-        // 3. No point showing arrows when there is nothing else to browse to
-        const hasMultiple = currentSlides.length > 1;
+        // No point showing arrows when there is nothing else to browse to
+        const hasMultiple = currentTiles.length > 1;
         prevBtn.style.display = hasMultiple ? '' : 'none';
         nextBtn.style.display = hasMultiple ? '' : 'none';
     }
 
-    // Add click event to every image with class "map", grouped by wrapper
+    // Clicking any mosaic tile opens the carousel on that tile
     document.querySelectorAll('.map-wrapper').forEach(wrapper => {
-        const slides = Array.from(wrapper.querySelectorAll('.map'));
+        const tiles = Array.from(wrapper.querySelectorAll('.map-tile'));
 
-        slides.forEach(img => {
-            img.addEventListener('click', () => {
-                // a. This image's siblings become the carousel's slide set
-                currentSlides = slides;
-
-                // b. Show the clicked image first
-                showSlide(slides.indexOf(img));
-
-                // c. Display the popup
+        tiles.forEach(tile => {
+            tile.addEventListener('click', () => {
+                currentTiles = tiles;              // this wrapper's mosaic order
+                showSlide(tiles.indexOf(tile));    // open on the clicked tile
                 carousel.classList.add('active');
             });
         });
@@ -129,6 +120,26 @@ document.addEventListener('DOMContentLoaded', () => {
             showSlide(currentIndex - 1);
         } else if (e.key === 'ArrowRight') {
             showSlide(currentIndex + 1);
+        }
+    });
+
+    // Touch swipe, so mobile visitors can also browse with a finger.
+    // Harmless to attach unconditionally: the popup has pointer-events: none
+    // while closed, so these never fire until it's active.
+    let touchStartX = 0;
+
+    carousel.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].clientX;
+    });
+
+    carousel.addEventListener('touchend', (e) => {
+        const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const swipeThreshold = 40; // minimum px to count as an intentional swipe
+
+        if (deltaX > swipeThreshold) {
+            showSlide(currentIndex - 1); // swiped right -> previous
+        } else if (deltaX < -swipeThreshold) {
+            showSlide(currentIndex + 1); // swiped left -> next
         }
     });
 });
