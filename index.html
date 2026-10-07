@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- CSS  -->
+    <!-- CSS (index.css is loaded last, so it can override common.css) -->
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="index.css">
 
@@ -27,24 +27,96 @@
 </head>
 
 
-<body>
-
-
-<!----------- JS header languages and nav bar fetch -------------->
-
-<div id="header-placeholder"></div>
-
-
 
 
 <!---------------------- Page content ------------------------->
 
-    <main class="homepage-main">
-        <div class="homepage-text">
-            <p id="my-name"><b>Alexis Poupardin</b></p>
-            <p id="welcome-text">Welcome to my portfolio</p>
+
+<body class="homepage">
+ 
+<!----------- JS header languages and nav bar fetch -------------->
+ 
+<div id="header-placeholder"></div>
+ 
+<main class="homepage-main">
+ 
+  <!-- ================= SECTION 1: landing her ================= -->
+  <section class="hero-section" aria-labelledby="hero-title">
+ 
+    <!-- Background image -->
+    <img class="hero-image"
+         src="./IMAGES/NASA_BlackMarble_2016_Europe.png"
+         alt="Hero background image"
+         fetchpriority="high"
+         decoding="async">
+ 
+    <!-- Hero content -->
+    <div class="home-hero">
+      <h1 id="hero-title">Alexis Poupardin</h1>
+      <p class="home-hero-text">
+        GIS professional
+      </p>
+    </div>
+ 
+    <!-- Scroll hint: the footer arrow reversed (the path now points down) -->
+    <a href="#lower-section" class="bottom-button" aria-label="Scroll down to the portfolio">
+      <svg
+        class="footer-icons"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 8L12 16M12 16L15 13M12 16L9 13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="text-bottom-button">Dive into my work</span>
+    </a>
+ 
+  </section>
+ 
+  <!-- ================= SECTION 2: carousel + footer (full screen) ================= -->
+  <section class="lower-section" id="lower-section">
+ 
+    <div id="carousel-index" class="homepage-carousel carousel-index"
+         role="region" aria-roledescription="carousel" aria-label="Featured work">
+      <div class="carousel-viewport">
+        <div class="carousel-track">
+          
+          <article class="carousel-slide is-active" aria-roledescription="slide" aria-label="1 of 3">
+            <div class="carousel-image-frame">
+            <img src="./IMAGES/NASA_BlackMarble_2016_Europe.png" alt="Satellite view of Europe at night" decoding="async">
+            </div>
+          </article>
+
+          <article class="carousel-slide is-next" aria-roledescription="slide" aria-label="2 of 3" aria-hidden="true">
+            <div class="carousel-image-frame">
+            <img src="./MAPS/Paris_literature.webp" alt="Paris litterature map" decoding="async">
+            </div>
+          </article>
+
+          <article class="carousel-slide is-previous" aria-roledescription="slide" aria-label="3 of 3" aria-hidden="true">
+            <div class="carousel-image-frame">
+            <img src="./MAPS/Honduras.webp" alt="Honduras topographic map" decoding="async">
+            </div>
+          </article>
+
         </div>
-    </main>
+      </div>
+      <button class="carousel-control carousel-control--previous" type="button" aria-label="Show previous image"><span aria-hidden="true">&#10094;</span></button>
+      <button class="carousel-control carousel-control--next" type="button" aria-label="Show next image"><span aria-hidden="true">&#10095;</span></button>
+      <div class="carousel-dots" aria-label="Choose an image">
+        <button class="carousel-dot is-active" type="button" aria-label="Show image 1" aria-current="true"></button>
+        <button class="carousel-dot" type="button" aria-label="Show image 2"></button>
+        <button class="carousel-dot" type="button" aria-label="Show image 3"></button>
+      </div>
+    </div>
+ 
+    <!-- The footer is injected INSIDE the lower section, so it sits at the bottom of that screen.
+         (common.css already gives #footer-placeholder display: contents.) -->
+    <div id="footer-placeholder"></div>
+ 
+  </section>
+ 
+</main>
 
 
 
@@ -60,6 +132,7 @@
 
 <script src="includes.js"></script>
 <script src="script.js"></script>
+<script src="index.js"></script>
 
 
 </body>

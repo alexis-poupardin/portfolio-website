@@ -1,138 +1,539 @@
 
-/* -------------------- Disyplaying rules (specific to index) ----------------- */
-
-
-/* Keyframe for the gradual opacity fade and subtle upward motion */
-@keyframes fadeDissolve {
-    0% {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
+ 
+/* ---------- 1. Settings: tweak the design from here ---------- */
+:root {
+    --header-top: 1.5rem;        /* logo + nav: distance from the top of the page */
+    --header-left: 3rem;         /* logo: distance from the left side */
+    --nav-right: 8rem;           /* nav: distance from the right side */
+    --logo-width: 6rem;          /* logo size (common.css uses max 150px) */
+    --label-space: 1.6rem;       /* room above the language select for "Language :" */
+ 
+    --hero-text: #fff;           /* text colour on the dark hero image */
+    --logo-filter: brightness(0) invert(1);  /* logo turned white; set to "none" to keep its colours */
+ 
+    --nav-bg-usual: rgba(232, 221, 199, 0.75);   /* same value as the nav pill in common.css */
+    --nav-bg-over-hero: rgba(232, 221, 199, 0.28); /* more transparent while over the hero */
+ 
+    --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);  /* soft deceleration */
+    --appear-duration: 2s;       /* longer = smoother entrance */
+    --delay-logo: 0.3s;          /* staggered entrance... */
+    --delay-headings: 0.7s;
+    --delay-nav: 1.2s;           /* ...nav, language switch AND bottom arrow together */
+ 
+    --slide-count: 3;            /* number of REAL carousel slides (keyframes below fit 3) */
+    --slide-time: 5s;            /* time spent per slide */
 }
-
-/* Set initial hidden state and attach animation settings */
-.logo-HB,
-.homepage-text,
-.main-headings,
-.language-switcher,
-.navigation,
-.motto,
-footer {
-    opacity: 0; /* Keeps elements hidden until their delay starts */
-    animation: fadeDissolve 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+ 
+ 
+/* ---------- 2. Entrance animations ---------- */
+@keyframes appear {
+    from { opacity: 0; transform: translateY(-0.75rem); }
+    to   { opacity: 1; transform: none; }
 }
-
-/* STAGE 1: Logo + Homepage Text (Simultaneous) */
-.logo-HB, 
-.homepage-text {
-    animation-delay: 0.2s;
+@keyframes fade-in {             /* opacity only: the arrow already uses `translate` to centre itself */
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
-
-/* STAGE 2: Main Headings */
-.main-headings {
-    animation-delay: 1s;
+ 
+/* `both` keeps each element hidden during its delay. The nav animation goes on the
+   glass pill (the <ul>), not on .navigation, so the backdrop blur is not disturbed. */
+body.homepage .logo-HB,
+body.homepage .main-headings,
+body.homepage .motto,
+body.homepage .language-switcher,
+body.homepage .navigation > nav > ul {
+    animation: appear var(--appear-duration) var(--ease-smooth) both;
 }
-
-/* STAGE 3: Language Switcher */
-.language-switcher {
-    animation-delay: 1s;
+body.homepage .logo-HB                 { animation-delay: var(--delay-logo); }
+body.homepage .main-headings           { animation-delay: var(--delay-headings); }
+body.homepage .motto                   { animation-delay: calc(var(--delay-headings) + 0.15s); }
+body.homepage .language-switcher,
+body.homepage .navigation > nav > ul   { animation-delay: var(--delay-nav); }
+ 
+ 
+/* ---------- 3. Header: logo + headings (top-left) ---------- */
+/* header.html wraps them in <header id="top">; common.css centres it in a column */
+body.homepage header#top {
+    position: absolute;          /* over the hero, scrolls away with it */
+    top: var(--header-top);
+    left: var(--header-left);
+    z-index: 10;                 /* above the hero (later in the page) */
+    width: auto;                 /* common.css: 100% */
+    padding-top: 0;              /* common.css: 1rem */
+    scroll-margin-top: var(--header-top);  /* the footer arrow (#top) then lands at the very top */
 }
-
-/* STAGE 4: Motto */
-.motto {
-    animation-delay: 1s;
-}
-
-/* STAGE 4: Navigation Bar */
-.navigation {
-    animation-delay: 1s;
-}
-
-/* STAGE 5: Footer */
-footer {
-    animation-delay: 1s;
-}
-
-
-
-/* -------------------- header and branding (specific rules) ----------------- */
-
-
-header {
-    display: flex;
-    flex-direction: column;
+ 
+/* Grid: logo on the left spanning two rows, title + motto stacked on its right.
+   The two text rows share the extra height equally, so the text block ends up
+   centred on the logo's middle axis whatever the logo's size. */
+body.homepage .header-inner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 1.5rem;
     align-items: center;
-    padding-top: 1rem;
-    width: 100%;
+    width: auto;
+    padding: 0;
 }
-
-.header-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    padding: 0 1rem; 
+body.homepage .logo-HB {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    margin-top: 0;               /* common.css: 1rem */
 }
-
-.logo-HB {
-    margin-top: 1rem;
+body.homepage .logo-HB img {
+    display: block;
+    width: var(--logo-width);
+    max-width: none;
+    filter: var(--logo-filter);
 }
-
-.logo-HB img {
-    width: 100%;
-    max-width: 250px;
-    height: auto;
+body.homepage .main-headings {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;             /* title sits just above the middle axis */
 }
-
-.main-headings {
-    text-align: center;
-    margin-top: 0.5rem;
+body.homepage .main-headings .title {
+    color: var(--hero-text);
+    font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
 }
-
-
-.motto {
-    font-size: clamp(0.9rem, 2.5vw, 1rem);
-    font-weight: 500;
-    color: var(--color-accent);
-    margin-top: 0.3rem;
+body.homepage .motto {           /* hide it with display: none if you do not want it here */
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;           /* motto sits just below the middle axis */
+    color: rgb(255 255 255 / 0.85);
+    font-size: 0.85rem;
+    font-style: italic;
+    line-height: 1.3;
 }
-
-
-
-/* ------------------------ homepage (specific to index) ----------------- */ 
-
-
+ 
+ 
+/* ---------- 4. Language switcher (stays top-right) ---------- */
+/* common.css already pins it at top: 1.5rem / right: 2rem. The select is moved down by
+   one label height, and the label is taken out of the flow and placed above it. This way
+   the container is still the select alone, so the chevron (::after) keeps its position. */
+body.homepage .language-switcher {
+    top: calc(var(--header-top) + var(--label-space));
+}
+body.homepage .language-switcher label {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    translate: -50% 0;           /* centred above the select */
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    color: var(--hero-text);
+    text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+}
+ 
+ 
+/* ---------- 5. Navigation (fixed, top-right, follows the scroll) ---------- */
+/* common.css makes it sticky and full width; here it is fixed and as wide as its content */
+body.homepage .navigation {
+    position: fixed;
+    top: var(--header-top);
+    right: var(--nav-right);
+    width: auto;
+    margin: 0;
+}
+/* Glass pill: usual look (lower section) */
+body.homepage .navigation > nav > ul {
+    background: var(--nav-bg-usual);
+    transition: background-color 0.6s var(--ease-smooth);
+}
+/* While over the hero (class toggled by index.js): more transparent + light text,
+   because dark text would disappear on the dark map */
+body.nav-over-hero .navigation > nav > ul {
+    background: var(--nav-bg-over-hero);
+}
+body.nav-over-hero .navigation > nav > ul > li > a {
+    color: #fff;                 /* first-level links only: dropdown links stay dark */
+}
+body.homepage .navbar-icons path {
+    transition: stroke 0.6s var(--ease-smooth);
+}
+body.nav-over-hero .navbar-icons path {
+    stroke: #fff;                /* home icon (its stroke is set in the SVG markup) */
+}
+ 
+ 
+/* ---------- 6. Section 1: hero (full screen) ---------- */
+/* common.css gives <main> padding and centres its children: reset it for the full-bleed sections */
 .homepage-main {
-    justify-content: flex-start;
-    padding-top: 1.5rem;
+    width: 100%;
+    padding: 0;
+    align-items: stretch;
 }
-
-.homepage-text {
-    text-align: center;
-    margin-top: 5rem;
+.hero-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100svh;          /* accounts for mobile browser bars */
+    padding: 7rem 1.5rem 6.5rem; /* keeps text clear of the header (top) and the arrow (bottom) */
+    overflow: hidden;
+    background: #000;            /* shown while the image loads */
+    color: var(--hero-text);
 }
-
-#my-name {
-    font-size: clamp(2rem, 4vw, 5rem);
+.hero-image {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;           /* fills the screen without distortion */
 }
-
-#welcome-text {
-    font-size: clamp(1.3rem, 3vw, 2rem);
-    color: #5b6770; 
-}
-
-/* Decorative Framing Lines */
-.homepage-text::before,
-.homepage-text::after {
+/* Soft dark gradient: keeps header text and arrow readable */
+.hero-section::after {
     content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgb(0 0 0 / 0.45), transparent 35%, transparent 65%, rgb(0 0 0 / 0.5));
+}
+ 
+.home-hero {
+    position: relative;
+    z-index: 2;                  /* above the image and the gradient */
+    max-width: 760px;
+    text-align: center;
+    text-shadow: 0 2px 16px rgb(0 0 0 / 0.5);
+}
+.home-hero h1 {
+    margin: 0.4rem 0 1rem;
+    font-size: clamp(1.9rem, 6vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    text-wrap: balance;          /* avoids one lonely word on the last line */
+}
+
+
+.home-hero-text {
+    max-width: 38rem;
+    margin: 0 auto;
+    color: rgb(255 255 255 / 0.9);
+    font-size: clamp(1rem, 2vw, 1.3rem);
+}
+
+ 
+/* Buttons (kept from your draft; hero colours adapted to the dark image) */
+.button {
+    display: inline-flex;
+    min-height: 44px;            /* comfortable touch target */
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1.1rem;
+    border: 1px solid var(--color-accent);
+    border-radius: 0.5rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.hero-section .button--primary {
+    color: var(--color-dark);
+    background: var(--color-bg);
+    border-color: var(--color-bg);
+}
+.hero-section .button--secondary {
+    color: #fff;
+    background: transparent;
+    border-color: rgb(255 255 255 / 0.8);
+}
+@media (hover: hover) {          /* only on devices with a real pointer */
+    .button:hover { transform: translateY(-1px); }
+    .hero-section .button--primary:hover   { background: var(--color-sand); }
+    .hero-section .button--secondary:hover { background: rgb(255 255 255 / 0.18); }
+}
+ 
+/* Keyboard focus (could move to common.css later) */
+a:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+}
+ 
+ 
+/* ---------- 7. Scroll arrow (bottom middle of the hero) ---------- */
+.bottom-button {
+    position: absolute;
+    left: 50%;
+    bottom: max(2rem, env(safe-area-inset-bottom));
+    translate: -50% 0;           /* centres it (own property: no clash with the animations) */
+    z-index: 2;
+    display: block;
+    width: 2.4rem;
+    color: var(--hero-text);
+    text-decoration: none;
+    animation: fade-in var(--appear-duration) var(--ease-smooth) var(--delay-nav) both;
+}
+.bottom-button .footer-icons {   /* reuses the footer icon class, recoloured for the dark image */
     display: block;
     width: 100%;
-    max-width: 300px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--color-sand), transparent);
-    margin: 1.5rem auto;
+    height: auto;
+    stroke: currentColor;
+    animation: bounce 1.8s ease-in-out infinite;   /* moves down and up */
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(0.6rem); }
+}
+/* Text to the right of the arrow, so the arrow itself stays exactly centred */
+.text-bottom-button {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    margin-left: 0.75rem;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+    text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+}
+ 
+ 
+/* ---------- 8. Section 2: carousel + footer (full screen) ---------- */
+.lower-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100svh;
+    background: var(--color-bg);
+}
+/* Footer: unchanged. Its margin-top: auto (common.css) pins it to the bottom of this screen */
+ 
+.homepage-carousel {
+    --display-width: min(70vw, 65rem);
+    --display-height: clamp(28rem, 64vh, 47rem);
+
+    position: relative;
+    width: min(100%, 96rem);
+    height: var(--display-height);
+    margin: clamp(7rem, 13vh, 10rem) auto 1.25rem;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 1;
+    display: grid;
+    width: var(--display-width);
+    height: var(--display-height);
+    place-items: center;
+    overflow: hidden;
+    background: transparent;
+    box-shadow: none;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-50%) scale(0.8);
+    transition: transform 0.65s var(--ease-smooth),
+                opacity 0.45s ease,
+                visibility 0.45s;
+}
+
+/* This frame now dynamically becomes exactly the size of its image. */
+.carousel-image-frame {
+    position: relative;
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+    line-height: 0;
+    overflow: hidden;
+}
+
+.carousel-image-frame img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: var(--display-width);
+    max-height: var(--display-height);
+}
+
+/* Rounded corners apply only to the active image's real dimensions. */
+.carousel-slide.is-active .carousel-image-frame {
+    border-radius: 0.35rem;
+    box-shadow: 0 1rem 2.5rem rgb(40 49 56 / 0.2);
+}
+
+/* The 50% dark layer now covers only inactive pictures, not an empty window. */
+.carousel-image-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgb(10 18 20 / 0.5);
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 0.45s ease;
+}
+
+.carousel-slide.is-active .carousel-image-frame::after {
+    opacity: 0;
+}
+
+.carousel-slide.is-active {
+    z-index: 3;
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+}
+
+.carousel-slide.is-previous,
+.carousel-slide.is-next {
+    z-index: 2;
+    opacity: 1;
+    visibility: visible;
+}
+
+.carousel-slide.is-previous {
+    left: calc(50% - min(40vw, 36rem));
+    transform: translateX(-50%) scale(0.8);
+}
+
+.carousel-slide.is-next {
+    left: calc(50% + min(40vw, 36rem));
+    transform: translateX(-50%) scale(0.8);
+}
+
+
+.carousel-control {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    width: 27%;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    color: #fff;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    text-shadow: 0 0.2rem 0.8rem rgb(0 0 0 / 0.65);
+}
+
+.carousel-control--previous { left: 0; }
+.carousel-control--next { right: 0; }
+
+.carousel-control span {
+    display: block;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 400;
+    line-height: 1;
+    transition: transform 0.25s var(--ease-smooth);
+}
+
+
+@media (hover: hover) {
+    .carousel-control--previous:hover span { transform: translateX(-0.5rem); }
+    .carousel-control--next:hover span { transform: translateX(0.5rem); }
+}
+
+.carousel-control:focus-visible,
+.carousel-dot:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 0.3rem;
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: clamp(1rem, 3vh, 1.75rem);
+    left: 50%;
+    z-index: 5;
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    transform: translateX(-50%);
+}
+
+.carousel-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    padding: 0;
+    border: 1px solid rgb(255 255 255 / 0.9);
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.7);
+    box-shadow: 0 0.1rem 0.45rem rgb(0 0 0 / 0.55);
+    cursor: pointer;
+    transition: transform 0.25s var(--ease-smooth),
+                background-color 0.25s ease;
+}
+
+.carousel-dot.is-active {
+    width: 0.95rem;
+    height: 0.95rem;
+    background: transparent;
+    border-width: 0.17rem;
+}
+
+.carousel-dot:not(.is-active):hover {
+    transform: scale(1.2);
+}
+ 
+ 
+/* ---------- 9. Tablets and phones ---------- */
+/* Below 960px the nav no longer fits beside the logo: it moves under it, full width */
+@media (max-width: 960px) {
+    :root {
+        --header-top: 1rem;
+        --header-left: 1rem;
+        --logo-width: 4rem;
+    }
+    body.homepage header#top {
+        right: 5.5rem;           /* leaves room for the language switcher */
+    }
+    body.homepage .main-headings .title { font-size: 1.1rem; }
+    body.homepage .motto { font-size: 0.75rem; }
+ 
+    /* common.css makes the switcher static and centred below 768px: keep it top-right instead */
+    body.homepage .language-switcher {
+        position: absolute;
+        right: 1rem;
+        margin: 0;
+    }
+    body.homepage .navigation {
+        left: 1rem;
+        right: 1rem;
+        top: calc(var(--header-top) + var(--logo-width) + 0.75rem);
+    }
+    .hero-section { padding-top: 11rem; }
+    
+    .homepage-carousel {
+    height: clamp(26rem, 60svh, 38rem);
+    margin-top: 8.5rem;
+    }
+
+}
+@media (max-width: 600px) {
+    .hero-section { padding-top: 13rem; padding-bottom: 6rem; }   /* the nav can wrap onto 2 rows */
+    
+    .homepage-carousel {
+    height: clamp(21rem, 52svh, 30rem);
+    margin-top: 13rem;
+    }
+    
+    .home-hero__actions .button { flex: 1 1 100%; }  /* full-width buttons: easier to tap */
+}
+@media (max-width: 480px) {
+    /* Not enough width beside the arrow: stack the text under it */
+    .bottom-button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        width: auto;
+    }
+    .bottom-button .footer-icons { width: 2.4rem; }
+    .text-bottom-button { position: static; margin: 0; transform: none; }
+}
+ 
+ 
+/* ---------- 10. Respect the "reduce motion" system setting ---------- */
+@media (prefers-reduced-motion: reduce) {
+    body.homepage * { animation: none !important; transition: none !important; }
+    .bottom-button { animation: none !important; }
 }
