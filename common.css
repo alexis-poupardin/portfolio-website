@@ -5,6 +5,7 @@
     --color-dark: #283138;
     --color-accent: #84a98c;
     --color-sand: #e8ddc7;
+    --color-ivory: #fefcf6;
     --color-sand-alpha: rgba(232, 221, 199, 0.85);
     --color-grey: #5b6770; 
     --color-shadow1:0 8px 32px rgba(40, 49, 56, 0.08); /* nav bar main */
@@ -14,6 +15,35 @@
     
     /* Smooth transitions for interactive elements */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Liquid Glass look (navigation bar, sub menu, article boxes) */
+    --glass-bg: rgba(232, 221, 199, 0.28);      /* sand tint: lower the last number for clearer glass */
+    --glass-blur: blur(12px);                   /* how strongly the background behind is blurred */
+    --glass-border: rgba(255, 255, 255, 0.45);  /* light edge that gives the glass its depth */
+
+    /* Header, navigation bar and language switcher: layout */
+    --header-top: 1.5rem;        /* distance from the top of the page (logo, nav bar, language switcher) */
+    --header-left: 3rem;         /* logo: distance from the left side */
+    --nav-right: 8rem;           /* navigation bar: distance from the right side */
+    --logo-width: 6rem;          /* logo size */
+    --label-space: 1.6rem;       /* room above the language select for "Language :" */
+    --nav-pad-y: 0.8rem;         /* vertical padding of the nav bar (the submenu starts right below it) */
+    --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Header, navigation bar and language switcher: colours.
+       index.css changes some of them on the homepage (dark hero image behind the header) */
+    --nav-bg: rgba(232, 221, 199, 0.75);   /* glass of the nav bar AND of the Projects submenu */
+    --nav-text: var(--color-dark);         /* links, home icon, "Language :" label */
+    --nav-text-shadow: none;
+    --header-text: var(--color-dark);      /* title and motto */
+    --logo-filter: none;
+}
+
+/* Registered so the browser can animate it: how much of the hover oval is drawn
+   (0deg = nothing, 180deg = full oval) on each side of its bottom middle */
+@property --draw {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
 }
 
 * {
@@ -63,37 +93,88 @@ body {
 
 /* --------------------- header and branding ---------------------------- */
 
+/* In the flow of the page: the content starts below it.
+   (index.css lets it float over the hero image on the homepage) */
 header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 1rem;
+    position: relative;
     width: 100%;
+    padding: var(--header-top) var(--header-left) 0;
 }
 
+/* Grid: logo on the left spanning two rows, title + motto stacked on its right.
+   The two text rows share the extra height equally, so the text block
+   is centred on the middle axis of the logo. */
 .header-inner {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
     align-items: center;
-    width: 100%;
-    padding: 0 1rem; 
+    column-gap: 1.5rem;
 }
 
 .logo-HB {
-    margin-top: 1rem;
+    grid-column: 1;
+    grid-row: 1 / span 2;
 }
 
 .logo-HB img {
-    width: 100%;
-    max-width: 150px;
+    display: block;
+    width: var(--logo-width);
+    max-width: none;
     height: auto;
+    filter: var(--logo-filter);
+}
+
+/* The motto is centred on the middle axis of the title */
+.main-headings,
+.motto {
+    text-align: center;
+}
+
+.main-headings {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;             /* title sits just above the middle axis of the logo */
+    text-align: center;
+}
+
+.main-headings .title {
+    color: var(--header-text);
+    font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+/* Same column as the title and centred: the motto is on the middle axis of the title */
+.motto {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;           /* motto sits just below the middle axis of the logo */
+    text-align: center;
+    color: var(--header-text);
+    font-size: 0.85rem;
+    font-style: italic;
+    line-height: 1.3;
 }
 
 
 /* ------------------------------ Navigation bar ----------------------------- */
 
 
+
 .navigation {
+    /* --- settings of the bar (tweak them here) --- */
+    --nav-pad-y: 0.8rem;             /* top + bottom padding of the glass bar */
+    --nav-pad-x: 1.8rem;             /* left + right padding of the glass bar */
+    --submenu-gap: 0px;              /* space between the bar and its sub menu (0 = glued to the bar) */
+    --nav-ink: var(--color-dark);    /* links + home icon on a LIGHT background */
+
+    /* --- hover outline (the "cartouche") --- */
+    --cartouche-color: currentColor; /* same colour as the link; use var(--color-accent) for green */
+    --cartouche-width: 1.5px;
+    --cartouche-speed: 0.5s;
+
     position: sticky; /* Container sticking to top of screen on scroll */
     top: 1rem; /* Gap from the top edge when scrolling */
     z-index: 1000; /* Keeps nav floating above all page content */
@@ -104,77 +185,82 @@ header {
     justify-content: center;
 }
 
+/* script.js adds this class while the bar is above a DARK area (hero image, dark section...) */
+.navigation.is-on-dark {
+    --nav-ink: var(--color-ivory);    /* links + home icon on a DARK background */
+}
+
 
 .navigation ul {
     display: flex;
     list-style: none;
     align-items: center;
-    gap: 1.5rem; 
-    padding: 0.8rem 1.8rem;
+    gap: 1.5rem;
+    padding: var(--nav-pad-y) var(--nav-pad-x);
     border-radius: 50px;
-    
-    /* ---  GLASS EFFECT --- */
-    
-    background: rgba(232, 221, 199, 0.75); 
-    
-    /* Blurs content scrolling underneath */
-    -webkit-backdrop-filter: blur(12px); /* Safari support */
-    backdrop-filter: blur(12px);
-    
-    /* Subtle white edge highlight for glass depth */
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    
-    /* Soft shadow to elevate glass off the page background */
-    box-shadow:var(--color-shadow1);
-    
     flex-wrap: wrap;
     justify-content: center;
+}
+
+/* --- GLASS EFFECT of the main bar ---
+   It is painted by a ::before layer and not on the <ul> itself: a parent that has a
+   backdrop-filter stops the sub menu's own backdrop-filter from seeing the page behind it. */
+.navigation > nav > ul {
+    position: relative;
+}
+
+.navigation > nav > ul::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur); /* Safari support */
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--color-shadow1);
+    pointer-events: none;
 }
 
 .navigation > nav > ul > li {
     position: relative;
     display: flex;
     align-items: center;
+    align-self: stretch; /* as tall as the bar's content, so the sub menu can hang from the bar's real bottom edge */
 }
 
 .navigation li {
     position: relative;
 }
 
-/* Invisible structural bridge to dropdown preventing hover gaps */
-.navigation li::after {
+/* Invisible bridge between "Projects" and its sub menu: the hover is not lost
+   while the mouse crosses the bar's bottom padding */
+.navigation > nav > ul > li:has(> ul)::after {
     content: "";
     position: absolute;
     left: 0;
     top: 100%;
     width: 100%;
-    height: 8px;
+    height: calc(var(--nav-pad-y) + var(--submenu-gap));
 }
 
 /* Navigation Link Styling */
 .navigation a {
-    position: relative; /* Required for pseudo-element underline */
+    position: relative; /* anchor of the hover outline */
     text-decoration: none;
-    color: var(--color-dark);
+    color: var(--nav-ink);
     font-weight: 600;
     transition: var(--transition-smooth);
 }
 
-/* Hover underline effect */
-.navigation a::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: -4px;
-    left: 50%;
-    background-color: var(--color-accent);
-    transition: var(--transition-smooth);
-    transform: translateX(-50%);
+/* The home icon takes the colour of its link (its stroke is set in the SVG markup) */
+.navbar-icons path {
+    stroke: currentColor;
 }
 
-.navigation a:hover::after {
-    width: 60%;
+/* Removes the small gap an inline SVG leaves under itself, so the hover outline is centred on the icon */
+.navbar-icons svg {
+    display: block;
 }
 
 .navbar-icons {
@@ -183,23 +269,68 @@ header {
     display: block;
 }
 
-/* Submenu Dropdown Container (Matching Frosted Glass Style) */
+
+/* ---- Hover outline: a rounded "cartouche" drawn around the link ----
+   Two strokes leave the bottom middle of the link, run around it in opposite directions
+   and meet at the top middle. The outline is a rounded border (::after) shown through a
+   conic-gradient mask; the mask angle (--cartouche-progress) is animated from 0deg to 180deg. */
+
+@property --cartouche-progress {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+
+.navigation a::after {
+    content: "";
+    position: absolute;
+    inset: -0.3rem -0.75rem; /* room between the text and the outline: top/bottom, left/right */
+    border: var(--cartouche-width) solid var(--cartouche-color);
+    border-radius: 999px; /* fully rounded ends */
+    pointer-events: none;
+    mask: conic-gradient(
+        from 180deg, /* 180deg = pointing down: the strokes start at the bottom middle */
+        #000 0deg var(--cartouche-progress), /* stroke 1: clockwise (up the left side) */
+        transparent var(--cartouche-progress) calc(360deg - var(--cartouche-progress)),
+        #000 calc(360deg - var(--cartouche-progress)) 360deg /* stroke 2: anticlockwise (up the right side) */
+    );
+    transition: --cartouche-progress var(--cartouche-speed) ease-in-out;
+}
+
+.navigation a:hover::after {
+    --cartouche-progress: 180deg; /* the two strokes have met at the top middle */
+}
+
+/* Home icon: tighter outline, so it stays close to a circle */
+.navigation .navbar-icons::after {
+    inset: -0.35rem -0.55rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .navigation a::after {
+        transition: none;
+    }
+}
+
+
+/* Submenu Dropdown Container (same Liquid Glass as the main bar) */
 .navigation li ul {
     display: none;
     position: absolute;
-    top: calc(100% + 8px);
+    /* starts exactly at the bottom edge of the bar... */
+    top: calc(100% + var(--nav-pad-y) + var(--submenu-gap));
+    /* ...and is centred on the middle axis of the "Projects" link */
     left: 50%;
     transform: translateX(-50%);
     flex-direction: column;
     gap: 0;
     list-style: none;
-    
-    /* Frosted glass styling matching main pill */
-    background: rgba(232, 221, 199, 0.88);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    
+
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+
     border-radius: 12px;
     width: max-content;
     min-width: unset;
@@ -218,13 +349,11 @@ header {
     padding: 0.7rem 1.4rem;
 }
 
+/* These links already have padding: the outline sits inside it */
 .navigation li ul a::after {
-    bottom: 4px; 
+    inset: 0.4rem 0.65rem;
 }
 
-.navigation li ul a:hover::after {
-    width: 40%;
-}
 
 /* -------------------------- main ---------------------- */
 
@@ -241,9 +370,12 @@ main {
 
 /* --------------------- language switcher -------------------------- */
 
+/* Fixed like the nav bar, so it follows it when scrolling. The select sits one label
+   height below the top line; the label is taken out of the flow and written above it,
+   so the box stays the select alone and the chevron (::after) keeps its position. */
 .language-switcher {
-    position: absolute;
-    top: 1.5rem;
+    position: fixed;
+    top: calc(var(--header-top) + var(--label-space));
     right: 2rem;
     display: flex;
     align-items: center;
@@ -263,9 +395,17 @@ main {
 }
 
 .language-switcher label {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    translate: -50% 0;           /* centred above the select */
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--color-dark);
+    color: var(--nav-text);      /* same colour as the nav bar links */
+    text-shadow: var(--nav-text-shadow);
+    transition: color 0.6s var(--ease-smooth);
 }
 
 .language-switcher select {
@@ -344,29 +484,49 @@ footer {
     transform: translateY(-6px); 
 }
 
+#header-placeholder,
 #footer-placeholder {
     display: contents;
 }
 
 /* --------------------- mobile devices optimisation --------------------------- */
 
-/* Tablet & Smaller Devices (Max Width: 768px) */
-@media (max-width: 768px) {
-    .language-switcher {
-        position: static;
-        margin: 1rem auto 0 auto;
-        justify-content: center;
-    }
-    
-    header {
-        padding-top: 1rem;
-    }
-    
-    .navigation {
-        margin-top: 1.5rem;
+/* Below 960px the nav bar no longer fits beside the logo: it moves under it, full width */
+@media (max-width: 960px) {
+    :root {
+        --header-top: 1rem;
+        --header-left: 1rem;
+        --logo-width: 4rem;
     }
 
-       .map-mosaic {
+    header {
+        padding-right: 5.5rem;   /* leaves room for the language switcher */
+        margin-bottom: 5rem;     /* room for the fixed nav bar, which sits under the logo row */
+    }
+
+    .main-headings .title {
+        font-size: 1.1rem;
+    }
+
+    .motto {
+        font-size: 0.75rem;
+    }
+
+    .language-switcher {
+        right: 1rem;
+    }
+
+    .navigation {
+        left: 1rem;
+        right: 1rem;
+        top: calc(var(--header-top) + var(--logo-width) + 0.75rem);
+    }
+}
+
+/* Tablet & Smaller Devices (Max Width: 768px) */
+@media (max-width: 768px) {
+
+    .map-mosaic {
         column-count: 2;
         column-width: 160px;
     }
@@ -386,12 +546,26 @@ footer {
         justify-self: center;
     }
     
-    .navigation ul {
+    header {
+        margin-bottom: 7rem;     /* the nav bar can wrap onto two rows */
+    }
+
+    .navigation > nav > ul {
         border-radius: 20px;
         padding: 0.8rem;
         gap: 1rem;
     }
-    
+
+    /* The bridge is not needed here: the submenu opens inside the bar */
+    .navigation > nav > ul > li::after {
+        display: none;
+    }
+
+ /* no hover bridge needed: the sub menu is part of the flow here */
+    .navigation > nav > ul > li:has(> ul)::after {
+        display: none;
+    }
+
     .navigation li ul {
         position: static;
         transform: none;
@@ -399,6 +573,8 @@ footer {
         box-shadow: none;
         background: rgba(0,0,0,0.03);
         margin-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.45);
+        border-radius: 12px;
     }
 
     .map-mosaic {
@@ -484,7 +660,10 @@ footer {
     border: 1px solid var(--color-dark); 
     padding: 2rem; 
     border-radius: 12px; 
-    background: var(--color-sand); 
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--color-shadow1);
     width: 100%; 
     opacity: 0;
     animation: fadeInSection 0.6s ease-out 0.4s forwards;
@@ -559,7 +738,7 @@ footer {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-    z-index: 1000;
+    z-index: 1200;  /* above the fixed nav bar (1000) and language switcher (1100) */
     cursor: default;
 }
 

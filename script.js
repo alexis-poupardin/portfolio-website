@@ -192,3 +192,80 @@ function smoothScrollTo(element, duration = 1000) {
     requestAnimationFrame(animation);
 }
 
+
+
+
+// ------------------- navigation bar: light or dark colours ----------------- //
+// Looks at what is displayed BEHIND the middle of the navigation bar and toggles the
+// class "is-on-dark" on .navigation. common.css then draws the links and the home icon
+// in sand colour when the class is present, and in dark colour when it is absent.
+// A section can force the result with  data-nav-theme="dark"  or  data-nav-theme="light".
+
+(() => {
+    // ---- settings ----
+    const NAV_SELECTOR = '.navigation';   // element that receives the class
+    const BAR_SELECTOR = 'nav > ul';      // the glass bar inside it (its middle is the point we look at)
+    const DARK_CLASS = 'is-on-dark';
+    const BRIGHTNESS_LIMIT = 0.5;         // 0 = black ... 1 = white: a background below this counts as dark
+    const MIN_OPACITY = 0.5;              // backgrounds more transparent than this are ignored (glass boxes...)
+
+    let ticking = false;                  // avoids running the check more than once per frame
+
+    // Reads a computed colour such as "rgb(0, 0, 0)" or "rgba(0, 0, 0, 0.5)"; null if unusable
+    function parseColor(css) {
+        const numbers = css.match(/[\d.]+/g);
+        if (!numbers || numbers.length < 3 || css.startsWith('color(')) return null;
+        const [r, g, b] = numbers.map(Number);
+        const a = numbers.length > 3 ? Number(numbers[3]) : 1;
+        return { r, g, b, a };
+    }
+
+    // Perceived brightness of a colour, from 0 (black) to 1 (white)
+    function brightness({ r, g, b }) {
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    }
+
+    // true if the first "real" background found behind the bar is dark
+    function isDarkBehind(navRoot, bar) {
+        const box = bar.getBoundingClientRect();
+        const x = box.left + box.width / 2;
+        const y = box.top + box.height / 2;
+
+        // every element under that point, from the topmost to the bottommost
+        for (const el of document.elementsFromPoint(x, y)) {
+            if (navRoot.contains(el)) continue;            // skip the navigation itself
+
+            const forced = el.dataset.navTheme;            // optional manual override
+            if (forced) return forced === 'dark';
+
+            const color = parseColor(getComputedStyle(el).backgroundColor);
+            if (color && color.a >= MIN_OPACITY) {
+                return brightness(color) < BRIGHTNESS_LIMIT;
+            }
+        }
+        return false;                                      // nothing found: the page background is light
+    }
+
+    function update() {
+        // The nav is injected by includes.js after a fetch(), so look it up at call time
+        const navRoot = document.querySelector(NAV_SELECTOR);
+        const bar = navRoot && navRoot.querySelector(BAR_SELECTOR);
+        if (!bar) return;                                  // header not injected yet
+        navRoot.classList.toggle(DARK_CLASS, isDarkBehind(navRoot, bar));
+    }
+
+    // Throttle scroll events with requestAnimationFrame (smooth + cheap)
+    window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+            update();
+            ticking = false;
+        });
+    }, { passive: true });
+
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    document.addEventListener('partials-loaded', update);  // fired by includes.js once the header exists
+    update();                                              // in case the header is already there
+})();

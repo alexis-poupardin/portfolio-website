@@ -12,7 +12,7 @@ async function loadPartials() {
 
     await Promise.all([
         loadPartial('header-placeholder', 'header.html'),
-        loadPartial('footer-placeholder', 'footer.html')
+        loadPartial('footer-placeholder', 'footer.html'),
     ]);
 
 // ---------------- language switcher --------------- //
@@ -22,6 +22,6 @@ async function loadPartials() {
     });
 }
 
-loadPartials();
-
-
+loadPartials().then(() => {
+    document.dispatchEvent(new Event('partials-loaded'));
+});

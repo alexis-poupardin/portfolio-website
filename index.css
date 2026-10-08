@@ -8,11 +8,10 @@
     --logo-width: 6rem;          /* logo size (common.css uses max 150px) */
     --label-space: 1.6rem;       /* room above the language select for "Language :" */
  
-    --hero-text: #fff;           /* text colour on the dark hero image */
+    --hero-text: #fefcf6;           /* text colour on the dark hero image */
     --logo-filter: brightness(0) invert(1);  /* logo turned white; set to "none" to keep its colours */
  
-    --nav-bg-usual: rgba(232, 221, 199, 0.75);   /* same value as the nav pill in common.css */
-    --nav-bg-over-hero: rgba(232, 221, 199, 0.28); /* more transparent while over the hero */
+    --hero-overlay-opacity: 20%; /* light overlay on the hero image: 0% = none, 100% = solid */
  
     --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);  /* soft deceleration */
     --appear-duration: 2s;       /* longer = smoother entrance */
@@ -35,14 +34,15 @@
     to   { opacity: 1; }
 }
  
-/* `both` keeps each element hidden during its delay. The nav animation goes on the
-   glass pill (the <ul>), not on .navigation, so the backdrop blur is not disturbed. */
+/* `backwards` keeps each element hidden during its delay, then lets go of it once the
+   animation is over. (With `both` the nav would stay "animated" forever, and the blur of its
+   glass layer and of its sub menu would silently stop working.) */
 body.homepage .logo-HB,
 body.homepage .main-headings,
 body.homepage .motto,
 body.homepage .language-switcher,
 body.homepage .navigation > nav > ul {
-    animation: appear var(--appear-duration) var(--ease-smooth) both;
+        animation: appear var(--appear-duration) var(--ease-smooth) backwards;
 }
 body.homepage .logo-HB                 { animation-delay: var(--delay-logo); }
 body.homepage .main-headings           { animation-delay: var(--delay-headings); }
@@ -136,24 +136,15 @@ body.homepage .navigation {
     width: auto;
     margin: 0;
 }
-/* Glass pill: usual look (lower section) */
-body.homepage .navigation > nav > ul {
-    background: var(--nav-bg-usual);
-    transition: background-color 0.6s var(--ease-smooth);
-}
-/* While over the hero (class toggled by index.js): more transparent + light text,
-   because dark text would disappear on the dark map */
-body.nav-over-hero .navigation > nav > ul {
-    background: var(--nav-bg-over-hero);
-}
+
 body.nav-over-hero .navigation > nav > ul > li > a {
-    color: #fff;                 /* first-level links only: dropdown links stay dark */
+    color: #fefcf6;                 /* first-level links only: dropdown links stay dark */
 }
 body.homepage .navbar-icons path {
     transition: stroke 0.6s var(--ease-smooth);
 }
 body.nav-over-hero .navbar-icons path {
-    stroke: #fff;                /* home icon (its stroke is set in the SVG markup) */
+    stroke: #fefcf6;                /* home icon (its stroke is set in the SVG markup) */
 }
  
  
@@ -184,6 +175,18 @@ body.nav-over-hero .navbar-icons path {
     height: 100%;
     object-fit: cover;           /* fills the screen without distortion */
 }
+
+/* Light warm overlay on the hero image (same colour as --color-bg, opacity set in section 1).
+   An <img> cannot hold an overlay itself, so the section's ::before layer sits right above it. */
+.hero-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;                  /* above the image (0); the dark gradient below (::after) comes later, so it stays on top */
+    pointer-events: none;
+    background: color-mix(in srgb, var(--color-bg) var(--hero-overlay-opacity), transparent);
+}
+
 /* Soft dark gradient: keeps header text and arrow readable */
 .hero-section::after {
     content: "";
@@ -237,7 +240,7 @@ body.nav-over-hero .navbar-icons path {
     border-color: var(--color-bg);
 }
 .hero-section .button--secondary {
-    color: #fff;
+    color: #fefcf6;
     background: transparent;
     border-color: rgb(255 255 255 / 0.8);
 }
@@ -409,7 +412,7 @@ a:focus-visible {
     align-items: center;
     justify-content: center;
     border: 0;
-    color: #fff;
+    color: #fefcf6;
     background: transparent;
     cursor: pointer;
     font: inherit;
@@ -435,7 +438,7 @@ a:focus-visible {
 
 .carousel-control:focus-visible,
 .carousel-dot:focus-visible {
-    outline: 3px solid #fff;
+    outline: 3px solid #fefcf6;
     outline-offset: 0.3rem;
 }
 
