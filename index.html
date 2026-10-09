@@ -97,21 +97,17 @@
       <div class="carousel-viewport">
         <div class="carousel-track">
 
-          <!-- One <article> per map. index.js cuts each <img> into the 3 folding panels by itself,
-               so adding a map = copying one <article> (and one dot below). -->
-          <article class="carousel-slide is-active" aria-roledescription="slide" aria-label="1 of 3">
-            <div class="carousel-image-frame">
-              <img class="map-source" src="./IMAGES/NASA_BlackMarble_2016_Europe.png" alt="Satellite view of Europe at night" decoding="async">
-            </div>
-          </article>
+          <!-- One <article> per map. index.js automatically cuts each <img> into 3 folding
+               panels and generates the dots below. To add or remove a map, you only need to
+               add or remove an <article> element here. -->
 
-          <article class="carousel-slide" aria-roledescription="slide" aria-label="2 of 3" aria-hidden="true">
+          <article class="carousel-slide is-active" aria-roledescription="slide" aria-label="1 of 2">
             <div class="carousel-image-frame">
               <img class="map-source" src="./MAPS/Paris_literature.webp" alt="Paris litterature map" decoding="async">
             </div>
           </article>
 
-          <article class="carousel-slide" aria-roledescription="slide" aria-label="3 of 3" aria-hidden="true">
+          <article class="carousel-slide" aria-roledescription="slide" aria-label="2 of 2" aria-hidden="true">
             <div class="carousel-image-frame">
               <img class="map-source" src="./MAPS/Honduras.webp" alt="Honduras topographic map" decoding="async">
             </div>
@@ -124,7 +120,6 @@
       <div class="carousel-dots" aria-label="Choose an image">
         <button class="carousel-dot is-active" type="button" aria-label="Show image 1" aria-current="true"></button>
         <button class="carousel-dot" type="button" aria-label="Show image 2"></button>
-        <button class="carousel-dot" type="button" aria-label="Show image 3"></button>
       </div>
     </div>
  

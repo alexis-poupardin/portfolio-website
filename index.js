@@ -35,12 +35,27 @@ function carouselUnfoldingMap() {
     if (!carousel) return;
 
     const slides = [...carousel.querySelectorAll('.carousel-slide')];
-    const dots = [...carousel.querySelectorAll('.carousel-dot')];
+    const dotsContainer = carousel.querySelector('.carousel-dots');
     const previousButton = carousel.querySelector('.carousel-control--previous');
     const nextButton = carousel.querySelector('.carousel-control--next');
 
-    if (slides.length < 2 || dots.length !== slides.length || !previousButton || !nextButton) {
+    if (slides.length === 0) {
+        if (previousButton) previousButton.style.display = 'none';
+        if (nextButton) nextButton.style.display = 'none';
+        if (dotsContainer) dotsContainer.style.display = 'none';
         return;
+    }
+
+    const hasMultiple = slides.length > 1;
+
+    // Show or hide previous/next buttons depending on whether multiple slides exist
+    if (previousButton) {
+        previousButton.style.display = hasMultiple ? '' : 'none';
+        previousButton.hidden = !hasMultiple;
+    }
+    if (nextButton) {
+        nextButton.style.display = hasMultiple ? '' : 'none';
+        nextButton.hidden = !hasMultiple;
     }
 
     // Visitors who asked their system for less motion get the maps without any animation.
@@ -48,8 +63,10 @@ function carouselUnfoldingMap() {
     const speed = prefersReducedMotion ? 0 : 1;   // multiplies every duration: 0 = instant
 
     /* ================= State ================= */
-    let activeIndex = 0;      // map currently on screen
-    let targetIndex = 0;      // map the visitor asked for (differs from activeIndex while folding)
+    // If a slide is marked is-active in HTML, use it; otherwise default gracefully to slide 0
+    const markedIndex = slides.findIndex((slide) => slide.classList.contains('is-active'));
+    let activeIndex = markedIndex >= 0 ? markedIndex : 0;      // map currently on screen
+    let targetIndex = activeIndex;                             // map the visitor asked for (differs from activeIndex while folding)
     let progress = 0;         // 0 = folded, 1 = fully unfolded
     let runId = 0;            // increases at each request, so older sequences stop by themselves
     let frameId = 0;          // id of the running requestAnimationFrame
@@ -57,37 +74,58 @@ function carouselUnfoldingMap() {
     let hasStarted = false;   // true once the first unfolding was launched (or the visitor clicked)
     let swipeStart = null;
     let observer = null;
+    let dots = [];            // dynamically managed to always match slides.length
 
     const wrapIndex = (index) => (index + slides.length) % slides.length;
     const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms * speed));
-    const getFrame = (slide) => slide.querySelector('.carousel-image-frame');
+    const getFrame = (slide) => slide?.querySelector('.carousel-image-frame');
 
     /* ================= Building the 3 panels ================= */
     function buildMap(slide) {
         const frame = getFrame(slide);
+        if (!frame) return;
         const image = frame.querySelector('img');
+        if (!image) return;
 
         // One wrapper holding the three panels. They are decorative: the <img> keeps the alt text.
-        const panels = document.createElement('div');
-        panels.className = 'map-panels';
-        panels.setAttribute('aria-hidden', 'true');
+        let panels = frame.querySelector('.map-panels');
+        if (!panels) {
+            panels = document.createElement('div');
+            panels.className = 'map-panels';
+            panels.setAttribute('aria-hidden', 'true');
 
-        ['left', 'center', 'right'].forEach((side) => {
-            const panel = document.createElement('div');
-            panel.className = `map-panel map-panel--${side}`;
-            panels.append(panel);
-        });
-        frame.append(panels);
+            ['left', 'center', 'right'].forEach((side) => {
+                const panel = document.createElement('div');
+                panel.className = `map-panel map-panel--${side}`;
+                panels.append(panel);
+            });
+            frame.append(panels);
+        }
 
         // The image address is given once to CSS: each panel shows one third of it.
-        frame.style.setProperty('--map-image', `url("${image.currentSrc || image.src}")`);
+        const updateImageSrc = () => {
+            const src = image.currentSrc || image.src;
+            if (src) {
+                frame.style.setProperty('--map-image', `url("${src}")`);
+            }
+        };
+        updateImageSrc();
+        if (!image.complete) {
+            image.addEventListener('load', updateImageSrc, { once: true });
+        }
     }
 
     /* ================= Animation engine ================= */
     // Writes the folding state (0..1) on the active map: the CSS does the rest.
     function setProgress(value) {
         progress = value;
-        getFrame(slides[activeIndex]).style.setProperty('--unfold', value.toFixed(4));
+        const activeSlide = slides[activeIndex];
+        if (activeSlide) {
+            const frame = getFrame(activeSlide);
+            if (frame) {
+                frame.style.setProperty('--unfold', value.toFixed(4));
+            }
+        }
     }
 
     // Cancels the running animation (its promise resolves with false).
@@ -155,6 +193,11 @@ function carouselUnfoldingMap() {
             slide.classList.toggle('is-active', isActive);
             slide.classList.remove('is-borderless', 'is-settled');
             slide.setAttribute('aria-hidden', String(!isActive));
+
+            // Keep accessibility label in sync with current slide count
+            if (hasMultiple) {
+                slide.setAttribute('aria-label', `${slideIndex + 1} of ${slides.length}`);
+            }
         });
 
         setProgress(0);
@@ -169,7 +212,9 @@ function carouselUnfoldingMap() {
         stopAnimation();
 
         // Borders, shadows and the flat image go back at once (they fade back in while folding).
-        slides[activeIndex].classList.remove('is-borderless', 'is-settled');
+        if (slides[activeIndex]) {
+            slides[activeIndex].classList.remove('is-borderless', 'is-settled');
+        }
 
         if (index !== activeIndex) {
             // 1. Fold the current map back (reversed animation).
@@ -181,12 +226,16 @@ function carouselUnfoldingMap() {
         }
 
         const slide = slides[activeIndex];
+        if (!slide) return;
 
         // Make sure the picture is ready, otherwise the unfolding would show an empty map.
-        try {
-            await slide.querySelector('img').decode();
-        } catch (error) {
-            /* A broken image must not block the carousel. */
+        const img = slide.querySelector('img');
+        if (img) {
+            try {
+                await img.decode();
+            } catch (error) {
+                /* A broken image must not block the carousel. */
+            }
         }
         if (isOutdated()) return;
 
@@ -207,6 +256,7 @@ function carouselUnfoldingMap() {
 
     /* ================= Navigation: arrows, dots, swipe ================= */
     function goTo(index) {
+        if (!hasMultiple) return;
         const wanted = wrapIndex(index);
         if (wanted === targetIndex) return;
 
@@ -218,17 +268,43 @@ function carouselUnfoldingMap() {
         showSlide(wanted);
     }
 
-    const showPrevious = () => goTo(targetIndex - 1);
-    const showNext = () => goTo(targetIndex + 1);
+    const showPrevious = () => {
+        if (hasMultiple) goTo(targetIndex - 1);
+    };
+    const showNext = () => {
+        if (hasMultiple) goTo(targetIndex + 1);
+    };
 
-    previousButton.addEventListener('click', showPrevious);
-    nextButton.addEventListener('click', showNext);
+    if (previousButton) {
+        previousButton.addEventListener('click', showPrevious);
+    }
+    if (nextButton) {
+        nextButton.addEventListener('click', showNext);
+    }
 
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => goTo(index));
-    });
+    // Creates dots dynamically based on the number of slides
+    function setupDots() {
+        if (!dotsContainer) return;
+
+        dotsContainer.style.display = hasMultiple ? '' : 'none';
+        dotsContainer.hidden = !hasMultiple;
+        dotsContainer.innerHTML = '';
+
+        if (hasMultiple) {
+            dots = slides.map((_, index) => {
+                const dot = document.createElement('button');
+                dot.className = 'carousel-dot';
+                dot.type = 'button';
+                dot.setAttribute('aria-label', `Show image ${index + 1}`);
+                dot.addEventListener('click', () => goTo(index));
+                dotsContainer.append(dot);
+                return dot;
+            });
+        }
+    }
 
     carousel.addEventListener('pointerdown', (event) => {
+        if (!hasMultiple) return;
         if (event.pointerType !== 'touch') return;
         if (event.target.closest('.carousel-control, .carousel-dot')) return;
 
@@ -254,6 +330,8 @@ function carouselUnfoldingMap() {
         if (Math.abs(distanceX) < 48 || Math.abs(distanceX) <= Math.abs(distanceY)) {
             return;
         }
+
+        if (!hasMultiple) return;
 
         if (distanceX > 0) {
             showPrevious();
@@ -281,6 +359,7 @@ function carouselUnfoldingMap() {
     slides.forEach(buildMap);
     carousel.classList.add('is-enhanced');                          // CSS switches to the folding map
     carousel.style.setProperty('--borders-fade', `${BORDERS_FADE * speed}ms`);
+    setupDots();
     updateDots(activeIndex);
     render(activeIndex);                                            // first map shown folded
 
@@ -303,4 +382,8 @@ function carouselUnfoldingMap() {
     }
 }
 
-carouselUnfoldingMap();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', carouselUnfoldingMap);
+} else {
+    carouselUnfoldingMap();
+}
