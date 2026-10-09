@@ -23,8 +23,8 @@ function carouselUnfoldingMap() {
     const UNFOLD_DURATION = 2000;  // ms: a map unfolds in 2 s
     const FOLD_DURATION   = 2000;  // ms: folding back = the unfolding played in reverse
     const START_DELAY     = 400;   // ms: pause between reaching the section and the first unfolding
-    const BORDERS_DELAY   = 1500;  // ms: once unfolded, wait this long before the borders vanish
-    const BORDERS_FADE    = 600;   // ms: time the borders / shadows take to fade out
+    const BORDERS_DELAY   = 100;  // ms: once unfolded, wait this long before the borders vanish
+    const BORDERS_FADE    = 500;   // ms: time the borders / shadows take to fade out
     const VISIBLE_RATIO   = 0.5;   // share of the carousel that must be on screen to launch it
 
     // Ease-in-out (cubic): t goes 0 -> 1, the result goes 0 -> 1 with a soft start and end.
