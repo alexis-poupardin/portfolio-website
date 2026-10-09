@@ -41,6 +41,18 @@
         <p>Topography maps</p>
     </div>
 
+    <div class="map-wrapper">
+        <div class="map-mosaic">
+
+            <div class="map-tile">
+                <img class="map" src="./MAPS/Honduras.webp" alt="Topographic map of Honduras">
+                <p class="caption">Topographic map of Honduras</p>
+            </div>
+
+
+            </div>
+    </div>
+
 </section>
 
 
@@ -52,9 +64,21 @@
 
 <!------------------- Link to JS scripts ---------------------->
 
+<div id="map-carousel" class="lightbox">
+    <div class="lightbox-content">
+        <span class="lightbox-close map-carousel-close">&times;</span>
+        <img id="map-carousel-img" src="" alt="">
+
+        <div class="map-carousel-controls">
+            <span class="map-carousel-arrow map-carousel-prev" aria-label="Previous map">&#10094;</span>
+            <p id="map-caption"></p>
+            <span class="map-carousel-arrow map-carousel-next" aria-label="Next map">&#10095;</span>
+        </div>
+    </div>
+</div>
+
 <script src="includes.js"></script>
 <script src="script.js"></script>
-
 
 
 </body>
