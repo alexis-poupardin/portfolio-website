@@ -17,6 +17,7 @@
     --delay-logo: var(--delay-after-hero);                     /* staggered entrance... */
     --delay-headings: calc(var(--delay-after-hero) + 0.4s);
     --delay-nav: calc(var(--delay-after-hero) + 0.9s);         /* ...nav, language switch AND bottom arrow together */
+    --delay-compass-anim: calc(var(--delay-nav) + var(--appear-duration)); /* compass internals wait until every entrance animation is done */
 
     --map-tilt: 3deg;            /* unfolding map: tilt of the folded map (straightens while it opens) */
     --map-skew: 1deg;            /* unfolding map: slight skew of the two outer panels while folded */
@@ -215,7 +216,7 @@ body.homepage header#top {
 .compass-hero .compass-needles {
     transform-box: view-box;
     transform-origin: 404.56732px 404.56744px;
-    animation: compass-point-down 10s ease-in-out infinite;
+    animation: compass-point-down 10s ease-in-out var(--delay-compass-anim) infinite both;
 }
 @keyframes compass-point-down {
     0%                { transform: rotate(0deg); }
@@ -226,7 +227,7 @@ body.homepage header#top {
 /* Fade only: hidden → in (1s) → out (1s) before the loop restarts. */
 .compass-hero .compass-motion {
     opacity: 0;
-    animation: compass-motion-fade 10s ease-in-out infinite;
+    animation: compass-motion-fade 10s ease-in-out var(--delay-compass-anim) infinite both;
 }
 @keyframes compass-motion-fade {
     0%, 30%  { opacity: 0; }   /* 0–3s: hidden while the needle turns */
@@ -236,7 +237,7 @@ body.homepage header#top {
 
 /* Three visible up-and-down bumps (5–8s). */
 .compass-hero .compass-motion-bump {
-    animation: compass-motion-bump 10s linear infinite;
+    animation: compass-motion-bump 10s linear var(--delay-compass-anim) infinite both;
 }
 @keyframes compass-motion-bump {
     0%, 50%   { transform: translateY(0); }
