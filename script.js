@@ -195,23 +195,28 @@ function smoothScrollTo(element, duration = 1000) {
 
 
 
-// ------------------- navigation bar: light or dark colours ----------------- //
-// Looks at what is displayed BEHIND the middle of the navigation bar and toggles the
-// class "is-on-dark" on .navigation. common.css then draws the links and the home icon
-// in sand colour when the class is present, and in dark colour when it is absent.
-// A section can force the result with  data-nav-theme="dark"  or  data-nav-theme="light".
+// ------------------- adaptive interface contrast ----------------- //
+// Checks the background behind the shared interface elements.  They receive
+// .is-on-dark for ivory text (and the white logo); otherwise they use dark ink.
+// A section can force its result with data-ui-theme="dark" / "light".
+// data-nav-theme remains supported for existing page markup.
 
 (() => {
-    // ---- settings ----
-    const NAV_SELECTOR = '.navigation';   // element that receives the class
-    const BAR_SELECTOR = 'nav > ul';      // the glass bar inside it (its middle is the point we look at)
     const DARK_CLASS = 'is-on-dark';
-    const BRIGHTNESS_LIMIT = 0.5;         // 0 = black ... 1 = white: a background below this counts as dark
-    const MIN_OPACITY = 0.5;              // backgrounds more transparent than this are ignored (glass boxes...)
+    const BRIGHTNESS_LIMIT = 0.5;
+    const MIN_OPACITY = 0.5;
+    const THEME_TARGETS = [
+        { root: '.navigation', probe: 'nav > ul' },
+        { root: 'header#top', probe: '.header-inner' },
+        { root: '.language-switcher', probe: 'select' },
+        { root: 'footer', probe: '.footer-text' },
+    ];
 
-    let ticking = false;                  // avoids running the check more than once per frame
+    const sampleCanvas = document.createElement('canvas');
+    sampleCanvas.width = sampleCanvas.height = 1;
+    const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
+    let ticking = false;
 
-    // Reads a computed colour such as "rgb(0, 0, 0)" or "rgba(0, 0, 0, 0.5)"; null if unusable
     function parseColor(css) {
         const numbers = css.match(/[\d.]+/g);
         if (!numbers || numbers.length < 3 || css.startsWith('color(')) return null;
@@ -220,23 +225,66 @@ function smoothScrollTo(element, duration = 1000) {
         return { r, g, b, a };
     }
 
-    // Perceived brightness of a colour, from 0 (black) to 1 (white)
     function brightness({ r, g, b }) {
         return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     }
 
-    // true if the first "real" background found behind the bar is dark
-    function isDarkBehind(navRoot, bar) {
-        const box = bar.getBoundingClientRect();
+    // Returns the visible brightness of a same-origin <img> at a viewport point.
+    // This makes the theme respond to the actual hero image rather than its fallback colour.
+    function imageBrightness(image, x, y) {
+        if (!sampleContext || !image.complete || !image.naturalWidth || !image.naturalHeight) return null;
+
+        const rect = image.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+
+        const style = getComputedStyle(image);
+        const fit = style.objectFit;
+        const scale = fit === 'cover'
+            ? Math.max(rect.width / image.naturalWidth, rect.height / image.naturalHeight)
+            : fit === 'contain'
+                ? Math.min(rect.width / image.naturalWidth, rect.height / image.naturalHeight)
+                : null;
+        const renderedWidth = scale ? image.naturalWidth * scale : rect.width;
+        const renderedHeight = scale ? image.naturalHeight * scale : rect.height;
+        const renderedLeft = rect.left + (rect.width - renderedWidth) / 2;
+        const renderedTop = rect.top + (rect.height - renderedHeight) / 2;
+        const sourceX = ((x - renderedLeft) / renderedWidth) * image.naturalWidth;
+        const sourceY = ((y - renderedTop) / renderedHeight) * image.naturalHeight;
+
+        if (sourceX < 0 || sourceY < 0 || sourceX >= image.naturalWidth || sourceY >= image.naturalHeight) return null;
+
+        try {
+            sampleContext.clearRect(0, 0, 1, 1);
+            sampleContext.drawImage(image, sourceX, sourceY, 1, 1, 0, 0, 1, 1);
+            const [r, g, b] = sampleContext.getImageData(0, 0, 1, 1).data;
+            return brightness({ r, g, b });
+        } catch {
+            // A cross-origin image without CORS permission cannot be read. Fall back to CSS colours.
+            return null;
+        }
+    }
+
+    function forcedTheme(element) {
+        const source = element.closest('[data-ui-theme], [data-nav-theme]');
+        return source?.dataset.uiTheme || source?.dataset.navTheme || null;
+    }
+
+    function isDarkBehind(root, probe) {
+        const box = probe.getBoundingClientRect();
+        if (!box.width || !box.height) return false;
         const x = box.left + box.width / 2;
         const y = box.top + box.height / 2;
 
-        // every element under that point, from the topmost to the bottommost
         for (const el of document.elementsFromPoint(x, y)) {
-            if (navRoot.contains(el)) continue;            // skip the navigation itself
+            if (root.contains(el)) continue;
 
-            const forced = el.dataset.navTheme;            // optional manual override
-            if (forced) return forced === 'dark';
+            const forced = forcedTheme(el);
+            if (forced === 'dark' || forced === 'light') return forced === 'dark';
+
+            if (el instanceof HTMLImageElement) {
+                const value = imageBrightness(el, x, y);
+                if (value !== null) return value < BRIGHTNESS_LIMIT;
+            }
 
             const color = parseColor(getComputedStyle(el).backgroundColor);
             if (color && color.a >= MIN_OPACITY) {
@@ -247,25 +295,40 @@ function smoothScrollTo(element, duration = 1000) {
     }
 
     function update() {
-        // The nav is injected by includes.js after a fetch(), so look it up at call time
-        const navRoot = document.querySelector(NAV_SELECTOR);
-        const bar = navRoot && navRoot.querySelector(BAR_SELECTOR);
-        if (!bar) return;                                  // header not injected yet
-        navRoot.classList.toggle(DARK_CLASS, isDarkBehind(navRoot, bar));
+        THEME_TARGETS.forEach(({ root: rootSelector, probe: probeSelector }) => {
+            document.querySelectorAll(rootSelector).forEach(root => {
+                const probe = root.querySelector(probeSelector);
+                if (probe) root.classList.toggle(DARK_CLASS, isDarkBehind(root, probe));
+            });
+        });
     }
 
-    // Throttle scroll events with requestAnimationFrame (smooth + cheap)
-    window.addEventListener('scroll', () => {
+    function queueUpdate() {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
             update();
             ticking = false;
         });
-    }, { passive: true });
+    }
+
+    function watchImages() {
+        document.querySelectorAll('img').forEach(image => {
+            if (!image.complete) image.addEventListener('load', update, { once: true });
+        });
+    }
+
+    window.addEventListener('scroll', queueUpdate, { passive: true });
 
     window.addEventListener('resize', update);
-    window.addEventListener('load', update);
-    document.addEventListener('partials-loaded', update);  // fired by includes.js once the header exists
-    update();                                              // in case the header is already there
+    window.addEventListener('load', () => {
+        watchImages();
+        update();
+    });
+    document.addEventListener('partials-loaded', () => {
+        watchImages();
+        update();
+    });
+    watchImages();
+    update();
 })();
