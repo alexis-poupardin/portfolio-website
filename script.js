@@ -14,9 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
             lightboxImg.src = img.src;
             lightboxImg.alt = img.alt;
             
-            // 2. Find the caption paragraph inside the same .image-wrapper
-            const wrapper = img.closest('.image-wrapper');
-            const caption = wrapper ? wrapper.querySelector('.caption') : null;
+            // 2. Find the caption paragraph associated with this image
+            let caption = null;
+            if (img.nextElementSibling && img.nextElementSibling.classList.contains('caption')) {
+                caption = img.nextElementSibling;
+            } else {
+                const wrapper = img.closest('.image-wrapper');
+                caption = wrapper ? wrapper.querySelector('.caption') : null;
+            }
             
             // 3. Copy the caption text into the popup
             lightboxCaption.textContent = caption ? caption.textContent : '';
@@ -51,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!carousel) return; // this page has no map carousel, stop here
 
     const carouselImg = document.getElementById('map-carousel-img');
-    const mapCaption = document.getElementById('map-caption');
+    const mapCaption = document.getElementById('map-caption') || carousel.querySelector('.caption');
     const closeBtn = carousel.querySelector('.map-carousel-close');
     const prevBtn = carousel.querySelector('.map-carousel-prev');
     const nextBtn = carousel.querySelector('.map-carousel-next');
@@ -60,6 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // the .map-wrapper the visitor clicked into), and which one is active
     let currentTiles = [];
     let currentIndex = 0;
+
+    // Counter element positioned below the caption in the viewing window
+    let mapCounter = carousel.querySelector('#map-counter') || carousel.querySelector('.map-counter');
+    if (!mapCounter && mapCaption) {
+        mapCounter = document.createElement('div');
+        mapCounter.id = 'map-counter';
+        mapCounter.className = 'map-counter';
+
+        let captionWrapper = mapCaption.closest('.map-carousel-caption-wrapper');
+        if (!captionWrapper) {
+            captionWrapper = document.createElement('div');
+            captionWrapper.className = 'map-carousel-caption-wrapper';
+            mapCaption.parentNode.insertBefore(captionWrapper, mapCaption);
+            captionWrapper.appendChild(mapCaption);
+        }
+        captionWrapper.appendChild(mapCounter);
+    }
 
     // Displays the tile at "index", wrapping around at both ends
     function showSlide(index) {
@@ -71,6 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
         carouselImg.src = img.src;
         carouselImg.alt = img.alt;
         mapCaption.textContent = caption ? caption.textContent : '';
+
+        if (mapCounter) {
+            mapCounter.textContent = currentTiles.length > 0
+                ? `${currentIndex + 1} / ${currentTiles.length}`
+                : '';
+        }
 
         // No point showing arrows when there is nothing else to browse to
         const hasMultiple = currentTiles.length > 1;
