@@ -37,11 +37,29 @@
 <!--------------- Page content --------------------->
 
 <section class="article-section">
-    <h1 class="title-1">Crazy maps</h1>
+    <h1 class="title-1">Ancient and vintage maps</h1>
     
     <div class="article-text">
-        <p>Crazy maps</p>
+        <p>Text</p>
     </div>
+
+            <div class="map-wrapper">
+            <div class="map-mosaic">
+
+                <div class="map-tile">
+                    <img class="map" src="./INSPIRATION_MAPS/ANCIENT/10130087.webp" alt="Map of the World by Urbano Monte">
+                    <p class="caption">"Map of the World" by Urbano Monte (1587). One of the most unique cartographic achievements of the Renaissance and the largest known early world map from the 16th century.</p>
+                </div>
+
+                <div class="map-tile">
+                    <img class="map" src="./INSPIRATION_MAPS/ANCIENT/108521067-1.webp" alt="Africae nova descriptio by Joan Blaeu">
+                    <p class="caption">"Africae nova descriptio"by Joan Blaeu(1665)</p>
+                </div>
+
+
+            
+            </div>
+        </div>
 
 </section>
 
@@ -54,9 +72,21 @@
 
 <!------------------- Link to JS scripts ---------------------->
 
+<div id="map-carousel" class="lightbox">
+    <div class="lightbox-content">
+        <span class="lightbox-close map-carousel-close">&times;</span>
+        <img id="map-carousel-img" src="" alt="">
+
+        <div class="map-carousel-controls">
+            <span class="map-carousel-arrow map-carousel-prev" aria-label="Previous map">&#10094;</span>
+            <p id="map-caption"></p>
+            <span class="map-carousel-arrow map-carousel-next" aria-label="Next map">&#10095;</span>
+        </div>
+    </div>
+</div>
+
 <script src="includes.js"></script>
 <script src="script.js"></script>
-
 
 
 </body>
