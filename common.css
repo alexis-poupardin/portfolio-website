@@ -592,10 +592,6 @@ footer.is-on-dark {
         column-count: 1;
     }
 
-    .map-wrapper {
-        max-height: 60vh;
-    }
-
     .lightbox-content {
         padding: 1rem;
     }
@@ -738,7 +734,7 @@ footer.is-on-dark {
     filter: drop-shadow(var(--color-shadow4)); 
 }
 
-/* Styling for image captions */
+/* Styling for image captions + credits*/
 .caption {
     /* 1. Distance between the image above and this caption */
     margin-top: 0.75rem; 
@@ -750,6 +746,7 @@ footer.is-on-dark {
     font-style: italic;
     color: var(--color-dark);
 }
+
 
 /* --------------------- JS lightbox images --------------------*/
 
@@ -828,23 +825,18 @@ footer.is-on-dark {
 
 /* --------------------- map mosaic (thumbnails) --------------------*/
 
-/* Outer scroll area — matches the width of .article-text.
-   Plain block box on purpose: see note above on why the scrolling
-   container can't be the multi-column element itself. */
+/* Outer wrapper — matches the width of .article-text and displays
+   the mosaic directly on the main webpage without a nested scrollbar */
 .map-wrapper {
     width: 100%;
-    max-height: 70vh;
-    min-height: 0;
-    overflow-y: auto;
-    padding-right: 0.5rem; /* keeps the scrollbar off the images */
 }
 
-/* Inner multi-column mosaic — auto height, free to grow as tall as its
-   balanced columns need; the wrapper above handles the clipping/scroll */
+/* Inner multi-column mosaic — flows naturally on the main webpage */
 .map-mosaic {
     column-count: 3;
     column-width: 220px;
     column-gap: 1rem;
+    width: 100%;
 }
 
 /* Each tile: image + its caption overlay, self-contained */
@@ -865,7 +857,7 @@ footer.is-on-dark {
     transition: var(--transition-smooth);
 }
 
-/* Caption + dark scrim, on top of the image, hidden until revealed */
+/* Caption + gradient scrim, at the bottom of the image, hidden until revealed */
 .map-tile .caption {
     position: absolute;
     inset: 0;
@@ -876,9 +868,10 @@ footer.is-on-dark {
     color: #fff;
     font-style: italic;
     font-size: 0.9rem;
-    background: rgba(0, 0, 0, 0.5);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 45%, transparent 100%);
     opacity: 0;
     transition: var(--transition-smooth);
+    pointer-events: none;
 }
 
 /* Only reveal on hover for devices with a real pointer (mouse/trackpad) */
@@ -888,8 +881,101 @@ footer.is-on-dark {
     }
 
     .map-tile:hover .map {
-        transform: scale(1.05);
         filter: drop-shadow(var(--color-shadow4));
+    }
+}
+
+
+
+/* --------------------- map magnifying glass --------------------*/
+
+.map-magnifier {
+    position: fixed;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    border: 4px solid var(--color-sand);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2),
+                0 16px 40px rgba(0, 0, 0, 0.45),
+                inset 0 0 30px rgba(0, 0, 0, 0.25);
+    background-repeat: no-repeat;
+    background-color: var(--color-bg);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.6);
+    transition: opacity 0.25s ease, transform 0.25s var(--ease-smooth), visibility 0.25s;
+    z-index: 1300;
+    overflow: hidden;
+}
+
+.map-magnifier.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+/* Glass shine / reflection highlight overlay */
+.map-magnifier::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 35%, transparent 65%);
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.35);
+    pointer-events: none;
+}
+
+/* Precision reticle indicator in the center of the optical loupe */
+.map-magnifier::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid rgba(40, 49, 56, 0.45);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+/* Magnifier status pill */
+.map-magnifier-pill {
+    position: absolute;
+    bottom: calc(100% + 0.6rem);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    color: var(--color-dark);
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, transform 0.25s var(--ease-smooth), visibility 0.25s;
+    box-shadow: var(--color-shadow1);
+    white-space: nowrap;
+    z-index: 20;
+}
+
+#map-carousel.is-magnifier-active .map-magnifier-pill {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 600px) {
+    .map-magnifier {
+        width: min(340px, 85vw);
+        height: min(340px, 85vw);
     }
 }
 
@@ -904,7 +990,15 @@ footer.is-on-dark {
     border-radius: 8px;
     display: block;
     margin: 0 auto;
-    cursor: default;
+    cursor: zoom-in;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.2s ease;
+}
+
+#map-carousel.is-magnifier-active #map-carousel-img {
+    cursor: zoom-out;
+    touch-action: none;
 }
 
 /* Bottom bar: prev arrow — caption & counter — next arrow, side by side */
@@ -965,6 +1059,62 @@ footer.is-on-dark {
 
 .map-carousel-next:hover {
     transform: translateX(6px);
+}
+
+
+/* --------------------- credits (under the caption) --------------------*/
+
+/* Credits are only shown in the opened carousel (#map-credits), never on the
+   thumbnails of the mosaic: they stay hidden inside a .map-tile, hover included. */
+.map-tile .credits {
+    display: none;
+}
+
+/* Credits line: a bit smaller than the caption (0.9rem in the mosaic, 1rem in the carousel) */
+.credits {
+    margin: 0;
+    font-size: 0.8rem;
+    font-style: normal;
+    line-height: 1.4;
+    text-align: center;
+    color: var(--color-dark);
+}
+
+/* Clickable part of the credits: same size as .credits, bold, same colour in every state */
+.credits-links,
+.credits-links:link,
+.credits-links:visited,
+.credits-links:hover,
+.credits-links:active {
+    font-size: inherit;
+    font-weight: 700;
+    color: var(--color-dark);
+    text-decoration: none;
+}
+
+/* Small extra cue on hover (delete this rule if you only want the bold) */
+.credits-links:hover {
+    text-decoration: underline;
+}
+
+
+/* --------------------- text links (inside article-text) --------------------*/
+
+/* Same look as the text of .article-text, but bold to show the text is clickable */
+.text-links,
+.text-links:link,
+.text-links:visited,
+.text-links:hover,
+.text-links:active {
+    font-size: inherit;
+    font-weight: 700;
+    color: var(--color-dark);
+    text-decoration: none;
+}
+
+/* Small extra cue on hover (delete this rule if you only want the bold) */
+.text-links:hover {
+    text-decoration: underline;
 }
 
 
@@ -1150,4 +1300,18 @@ footer.is-on-dark {
         width: 100%;
         justify-content: center;
     }
+}
+
+
+/* ------------------- adaptive interface contrast (hero text) ----------------- */
+
+#hero-title,
+.home-hero-text {
+    color: var(--color-dark, #283138);
+    transition: color 0.3s var(--ease-smooth);
+}
+
+#hero-title.is-on-dark,
+.home-hero-text.is-on-dark {
+    color: var(--color-ivory, #fefcf6);
 }

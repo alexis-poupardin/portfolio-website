@@ -60,11 +60,151 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = carousel.querySelector('.map-carousel-close');
     const prevBtn = carousel.querySelector('.map-carousel-prev');
     const nextBtn = carousel.querySelector('.map-carousel-next');
+    const lightboxContent = carousel.querySelector('.lightbox-content');
 
     // The tiles currently being browsed (all .map-tile elements that share
     // the .map-wrapper the visitor clicked into), and which one is active
     let currentTiles = [];
     let currentIndex = 0;
+
+    // Magnifier state
+    let isMagnifierActive = false;
+    const ZOOM_FACTOR = 2.5;
+    const TARGET_SIZE = 340; // twice the previous 170px size
+
+    // Create magnifying glass element in the carousel
+    let magnifier = carousel.querySelector('.map-magnifier');
+    if (!magnifier) {
+        magnifier = document.createElement('div');
+        magnifier.className = 'map-magnifier';
+        magnifier.setAttribute('aria-hidden', 'true');
+        carousel.appendChild(magnifier);
+    }
+
+    // Informative pill indicating zoom status and how to exit
+    let magnifierPill = lightboxContent ? lightboxContent.querySelector('.map-magnifier-pill') : null;
+    if (!magnifierPill && lightboxContent) {
+        magnifierPill = document.createElement('div');
+        magnifierPill.className = 'map-magnifier-pill';
+        magnifierPill.setAttribute('aria-hidden', 'true');
+        magnifierPill.textContent = window.matchMedia('(pointer: coarse)').matches
+            ? 'Tap image to exit zoom'
+            : 'Click image to exit zoom';
+        lightboxContent.appendChild(magnifierPill);
+    }
+
+    function updateMagnifierSrc() {
+        if (!carouselImg) return;
+        const src = carouselImg.currentSrc || carouselImg.src;
+        if (src) {
+            magnifier.style.backgroundImage = `url("${src}")`;
+        }
+    }
+
+    function updateMagnifierPosition(clientX, clientY, isTouch = false) {
+        if (!isMagnifierActive || !carouselImg) return;
+
+        const rect = carouselImg.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        // Position clamped to image bounds
+        const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+        const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+
+        const glassSize = Math.min(
+            TARGET_SIZE,
+            Math.floor(window.innerWidth * 0.88),
+            Math.floor(window.innerHeight * 0.55)
+        );
+        const glassRadius = glassSize / 2;
+
+        magnifier.style.width = `${glassSize}px`;
+        magnifier.style.height = `${glassSize}px`;
+
+        let glassLeft = clientX - glassRadius;
+        let glassTop = clientY - glassRadius;
+
+        if (isTouch) {
+            // On touch devices (mobile), position the lens above the finger so it is never obstructed
+            const touchOffsetAbove = glassRadius + 45;
+            if (clientY - touchOffsetAbove >= 15) {
+                glassTop = clientY - touchOffsetAbove;
+            } else {
+                // If touching near the top edge of screen, position below the finger
+                glassTop = clientY + 45;
+            }
+        }
+
+        // Clamp inside the visible viewport
+        glassLeft = Math.max(12, Math.min(glassLeft, window.innerWidth - glassSize - 12));
+        glassTop = Math.max(12, Math.min(glassTop, window.innerHeight - glassSize - 12));
+
+        magnifier.style.left = `${glassLeft}px`;
+        magnifier.style.top = `${glassTop}px`;
+
+        // Background size and position for 2.5x magnification
+        const bgW = rect.width * ZOOM_FACTOR;
+        const bgH = rect.height * ZOOM_FACTOR;
+
+        const bgX = -(x * ZOOM_FACTOR - glassRadius);
+        const bgY = -(y * ZOOM_FACTOR - glassRadius);
+
+        magnifier.style.backgroundSize = `${bgW}px ${bgH}px`;
+        magnifier.style.backgroundPosition = `${bgX}px ${bgY}px`;
+    }
+
+    function activateMagnifier(clientX, clientY, isTouch = false) {
+        isMagnifierActive = true;
+        updateMagnifierSrc();
+        carousel.classList.add('is-magnifier-active');
+        magnifier.classList.add('is-active');
+        updateMagnifierPosition(clientX, clientY, isTouch);
+    }
+
+    function deactivateMagnifier() {
+        if (!isMagnifierActive) return;
+        isMagnifierActive = false;
+        carousel.classList.remove('is-magnifier-active');
+        magnifier.classList.remove('is-active');
+    }
+
+    // Only activate/toggle magnifying glass when the opened carousel image is clicked
+    if (carouselImg) {
+        carouselImg.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isMagnifierActive) {
+                deactivateMagnifier();
+            } else {
+                activateMagnifier(e.clientX, e.clientY, e.pointerType === 'touch');
+            }
+        });
+
+        // Desktop mouse tracking while magnifier is active
+        carouselImg.addEventListener('pointermove', (e) => {
+            if (!isMagnifierActive) return;
+            if (e.pointerType === 'mouse') {
+                updateMagnifierPosition(e.clientX, e.clientY, false);
+            }
+        });
+
+        // Mobile touch tracking while magnifier is active
+        carouselImg.addEventListener('touchstart', (e) => {
+            if (!isMagnifierActive) return;
+            const touch = e.touches[0];
+            if (touch) {
+                updateMagnifierPosition(touch.clientX, touch.clientY, true);
+            }
+        }, { passive: true });
+
+        carouselImg.addEventListener('touchmove', (e) => {
+            if (!isMagnifierActive) return;
+            e.preventDefault(); // prevent viewport scrolling while dragging magnifier on mobile
+            const touch = e.touches[0];
+            if (touch) {
+                updateMagnifierPosition(touch.clientX, touch.clientY, true);
+            }
+        }, { passive: false });
+    }
 
     // Counter element positioned below the caption in the viewing window
     let mapCounter = carousel.querySelector('#map-counter') || carousel.querySelector('.map-counter');
@@ -83,6 +223,17 @@ document.addEventListener('DOMContentLoaded', () => {
         captionWrapper.appendChild(mapCounter);
     }
 
+    // Credits line, created right under the caption (above the counter).
+    // It is filled from the hidden <p class="credits"> of the active tile.
+    let mapCredits = carousel.querySelector('#map-credits');
+    if (!mapCredits && mapCaption) {
+        mapCredits = document.createElement('p');
+        mapCredits.id = 'map-credits';
+        mapCredits.className = 'credits';
+        mapCredits.hidden = true;                       // stays hidden for tiles without credits
+        mapCaption.insertAdjacentElement('afterend', mapCredits);
+    }
+
     // Displays the tile at "index", wrapping around at both ends
     function showSlide(index) {
         currentIndex = (index + currentTiles.length) % currentTiles.length;
@@ -90,9 +241,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = tile.querySelector('.map');
         const caption = tile.querySelector('.caption');
 
+        deactivateMagnifier();
+
         carouselImg.src = img.src;
         carouselImg.alt = img.alt;
         mapCaption.textContent = caption ? caption.textContent : '';
+
+        // Copy the credits as HTML (not text) so the link inside stays clickable.
+        // The source is your own page markup, so innerHTML is safe here.
+        const credits = tile.querySelector('.credits');
+        if (mapCredits) {
+            mapCredits.innerHTML = credits ? credits.innerHTML : '';
+            mapCredits.hidden = !credits;               // no credits on this tile: hide the line
+        }
 
         if (mapCounter) {
             mapCounter.textContent = currentTiles.length > 0
@@ -106,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nextBtn.style.display = hasMultiple ? '' : 'none';
     }
 
-    // Clicking any mosaic tile opens the carousel on that tile
+    // Clicking any mosaic tile opens the carousel on that tile (thumbnails themselves do not magnify)
     document.querySelectorAll('.map-wrapper').forEach(wrapper => {
         const tiles = Array.from(wrapper.querySelectorAll('.map-tile'));
 
@@ -133,17 +294,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close popup on clicking the 'X' or outside the image container
     carousel.addEventListener('click', (e) => {
         if (e.target === carousel || e.target === closeBtn) {
+            deactivateMagnifier();
             carousel.classList.remove('active');
+        } else if (isMagnifierActive && e.target !== carouselImg) {
+            deactivateMagnifier();
         }
     });
 
-    // Keyboard navigation: Escape closes, left/right arrows browse.
-    // Guarded by .active so these keys stay silent while the popup is closed.
+    // Keyboard navigation: Escape closes magnifier or popup, left/right arrows browse.
     document.addEventListener('keydown', (e) => {
         if (!carousel.classList.contains('active')) return;
 
         if (e.key === 'Escape') {
-            carousel.classList.remove('active');
+            if (isMagnifierActive) {
+                deactivateMagnifier();
+            } else {
+                carousel.classList.remove('active');
+            }
         } else if (e.key === 'ArrowLeft') {
             showSlide(currentIndex - 1);
         } else if (e.key === 'ArrowRight') {
@@ -151,23 +318,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Touch swipe, so mobile visitors can also browse with a finger.
-    // Harmless to attach unconditionally: the popup has pointer-events: none
-    // while closed, so these never fire until it's active.
+    // Touch swipe, so mobile visitors can browse with a finger when magnifier is not active.
     let touchStartX = 0;
+    let touchStartY = 0;
 
     carousel.addEventListener('touchstart', (e) => {
+        if (isMagnifierActive) return;
         touchStartX = e.changedTouches[0].clientX;
+        touchStartY = e.changedTouches[0].clientY;
     });
 
     carousel.addEventListener('touchend', (e) => {
+        if (isMagnifierActive) return;
         const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const deltaY = e.changedTouches[0].clientY - touchStartY;
         const swipeThreshold = 40; // minimum px to count as an intentional swipe
 
-        if (deltaX > swipeThreshold) {
-            showSlide(currentIndex - 1); // swiped right -> previous
-        } else if (deltaX < -swipeThreshold) {
-            showSlide(currentIndex + 1); // swiped left -> next
+        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+            if (deltaX > 0) {
+                showSlide(currentIndex - 1); // swiped right -> previous
+            } else {
+                showSlide(currentIndex + 1); // swiped left -> next
+            }
         }
     });
 });
@@ -238,6 +410,8 @@ function smoothScrollTo(element, duration = 1000) {
         { root: 'header#top', probe: '.header-inner' },
         { root: '.language-switcher', probe: 'select' },
         { root: 'footer', probe: '.footer-text' },
+        { root: '#hero-title', probe: '#hero-title' },
+        { root: '.home-hero-text', probe: '.home-hero-text' },
     ];
 
     const sampleCanvas = document.createElement('canvas');
@@ -300,8 +474,14 @@ function smoothScrollTo(element, duration = 1000) {
     function isDarkBehind(root, probe) {
         const box = probe.getBoundingClientRect();
         if (!box.width || !box.height) return false;
-        const x = box.left + box.width / 2;
-        const y = box.top + box.height / 2;
+
+        // If the element is scrolled completely off-screen, maintain its current contrast state
+        if (box.bottom < 0 || box.top > window.innerHeight || box.right < 0 || box.left > window.innerWidth) {
+            return root.classList.contains(DARK_CLASS);
+        }
+
+        const x = Math.max(0, Math.min(box.left + box.width / 2, window.innerWidth - 1));
+        const y = Math.max(0, Math.min(box.top + box.height / 2, window.innerHeight - 1));
 
         for (const el of document.elementsFromPoint(x, y)) {
             if (root.contains(el)) continue;
@@ -325,7 +505,9 @@ function smoothScrollTo(element, duration = 1000) {
     function update() {
         THEME_TARGETS.forEach(({ root: rootSelector, probe: probeSelector }) => {
             document.querySelectorAll(rootSelector).forEach(root => {
-                const probe = root.querySelector(probeSelector);
+                const probe = probeSelector
+                    ? (root.matches?.(probeSelector) ? root : root.querySelector(probeSelector))
+                    : root;
                 if (probe) root.classList.toggle(DARK_CLASS, isDarkBehind(root, probe));
             });
         });
@@ -354,6 +536,10 @@ function smoothScrollTo(element, duration = 1000) {
         update();
     });
     document.addEventListener('partials-loaded', () => {
+        watchImages();
+        update();
+    });
+    document.addEventListener('DOMContentLoaded', () => {
         watchImages();
         update();
     });

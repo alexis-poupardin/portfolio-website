@@ -137,7 +137,6 @@ body.homepage header#top {
     z-index: 2;                  /* above the image and the gradient */
     max-width: 760px;
     text-align: center;
-    text-shadow: 0 2px 16px rgb(0 0 0 / 0.5);
 }
 .home-hero h1 {
     margin: 0.4rem 0 1rem;
@@ -147,11 +146,22 @@ body.homepage header#top {
     text-wrap: balance;          /* avoids one lonely word on the last line */
 }
 
+#hero-title,
+.home-hero-text {
+    color: var(--color-dark, #283138);
+    text-shadow: none;
+    transition: color 0.3s var(--ease-smooth), text-shadow 0.3s var(--ease-smooth);
+}
+
+#hero-title.is-on-dark,
+.home-hero-text.is-on-dark {
+    color: var(--color-ivory, #fefcf6);
+    text-shadow: 0 2px 16px rgb(0 0 0 / 0.5);
+}
 
 .home-hero-text {
     max-width: 38rem;
     margin: 0 auto;
-    color: rgb(255 255 255 / 0.9);
     font-size: clamp(1rem, 2vw, 1.3rem);
 }
 
