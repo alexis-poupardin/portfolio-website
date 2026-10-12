@@ -79,16 +79,13 @@ body {
 /* --------------------- header and branding ---------------------------- */
 
 /* In the flow of the page: the content starts below it.
-   (index.css lets it float over the hero image on the homepage) */
+   (index.css lets it float over the hero image on the homepage, and sets the colours of
+   the logo, title and motto there with the --hero-* variables) */
 header {
     --interface-ink: var(--color-dark);
     position: relative;
     width: 100%;
     padding: var(--header-top) var(--header-left) 0;
-}
-
-header.is-on-dark {
-    --interface-ink: var(--color-ivory);
 }
 
 /* Grid: logo on the left spanning two rows, title + motto stacked on its right.
@@ -114,10 +111,6 @@ header.is-on-dark {
     height: auto;
     filter: none;
     transition: filter 0.3s var(--ease-smooth);
-}
-
-header.is-on-dark .logo-HB img {
-    filter: brightness(0) invert(1);
 }
 
 /* The motto is centred on the middle axis of the title */
@@ -1313,18 +1306,4 @@ main > .map-wrapper {
         width: 100%;
         justify-content: center;
     }
-}
-
-
-/* ------------------- adaptive interface contrast (hero text) ----------------- */
-
-#hero-title,
-.home-hero-text {
-    color: var(--color-dark, #283138);
-    transition: color 0.3s var(--ease-smooth);
-}
-
-#hero-title.is-on-dark,
-.home-hero-text.is-on-dark {
-    color: var(--color-ivory, #fefcf6);
 }

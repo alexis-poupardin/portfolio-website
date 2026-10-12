@@ -419,8 +419,9 @@ function smoothScrollTo(element, duration = 1000) {
 
 
 // ------------------- adaptive interface contrast ----------------- //
-// Checks the background behind the shared interface elements.  They receive
-// .is-on-dark for ivory text (and the white logo); otherwise they use dark ink.
+// Checks the background behind the shared interface elements (navigation bar,
+// language switcher, footer).  They receive .is-on-dark for ivory text; otherwise
+// they use dark ink.
 // A section can force its result with data-ui-theme="dark" / "light".
 // data-nav-theme remains supported for existing page markup.
 
@@ -430,11 +431,12 @@ function smoothScrollTo(element, duration = 1000) {
     const MIN_OPACITY = 0.5;
     const THEME_TARGETS = [
         { root: '.navigation', probe: 'nav > ul' },
-        { root: 'header#top', probe: '.header-inner' },
         { root: '.language-switcher', probe: 'select' },
         { root: 'footer', probe: '.footer-text' },
-        { root: '#hero-title', probe: '#hero-title' },
-        { root: '.home-hero-text', probe: '.home-hero-text' },
+        // The header (logo, title, motto) and the hero texts (#hero-title, .home-hero-text)
+        // are NOT listed here any more: on the homepage their colours are set by hand with the
+        // --hero-* variables at the top of index.css. On the other pages the header sits on the
+        // light page background, so it keeps its default dark colour (see common.css).
     ];
 
     const sampleCanvas = document.createElement('canvas');

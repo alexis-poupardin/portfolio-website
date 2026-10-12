@@ -15,7 +15,6 @@
  *   click on the compass, which scrolls to #lower-section).
  * - An arrow, a dot or a swipe folds the current map back, then unfolds the new one.
  *
- * (A JS function name cannot contain hyphens, hence "carouselUnfoldingMap".)
  */
 function carouselUnfoldingMap() {
 

@@ -2,6 +2,15 @@
 :root {
     --hero-overlay-opacity: 30%; /* light overlay on the hero image: 0% = none, 100% = solid */
 
+    /* Colours of the homepage texts and logo. They are fixed (no automatic light/dark switch):
+       pick the colour that reads best on your hero image. Any CSS colour works. */
+    --hero-title-color: #fefcf6;            /* "Alexis Poupardin" (#hero-title) */
+    --hero-text-color: #fefcf6;             /* "GIS portfolio" (.home-hero-text) */
+    --hero-text-shadow: 0 2px 16px rgb(0 0 0 / 0.9);  /* shadow behind those two texts; "none" = no shadow */
+    --hero-logo-color: #fefcf6;             /* H&B logo (.logo-HB) */
+    --hero-header-title-color: #fefcf6;     /* "Cartographic Studio" (.title) */
+    --hero-motto-color: #fefcf6;            /* "A map is worth a thousand words" (.motto) */
+
     --appear-duration: 2s;       /* longer = smoother entrance (logo, headings, nav...) */
 
     /* Hero title + hero text: they zoom in from below, one after the other */
@@ -82,6 +91,29 @@ body.homepage header#top {
     scroll-margin-top: var(--header-top);
 }
 
+/* Colours of the logo, title and motto on the homepage: they come from the --hero-* variables
+   in section 1. `body.homepage` makes these rules more specific than the ones of common.css
+   (which colour them with --interface-ink on the other pages), whatever the loading order. */
+body.homepage .main-headings .title {
+    color: var(--hero-header-title-color);
+}
+body.homepage .motto {
+    color: var(--hero-motto-color);
+}
+
+/* The logo is an SVG loaded with <img>, so its colour cannot be changed with `color`.
+   Trick: the SVG is used as a mask over a plain coloured background, and the <img> picture
+   itself is pushed out of its box (object-position) so only the coloured silhouette is left. */
+body.homepage .logo-HB img {
+    background-color: var(--hero-logo-color);
+    -webkit-mask: url("./LOGOS/MY_LOGO/Logo_HB.svg") center / contain no-repeat;
+    mask: url("./LOGOS/MY_LOGO/Logo_HB.svg") center / contain no-repeat;
+    object-fit: none;
+    object-position: -9999px 0;
+    filter: none;
+    transition: background-color 0.3s var(--ease-smooth);
+}
+
 
 /* ---------- 4. Section 1: hero (full screen) ---------- */
 /* common.css gives <main> padding and centres its children: reset it for the full-bleed sections */
@@ -146,17 +178,16 @@ body.homepage header#top {
     text-wrap: balance;          /* avoids one lonely word on the last line */
 }
 
+/* Colours come from the --hero-* variables in section 1 (no more .is-on-dark switch) */
+#hero-title {
+    color: var(--hero-title-color);
+}
+.home-hero-text {
+    color: var(--hero-text-color);
+}
 #hero-title,
 .home-hero-text {
-    color: var(--color-dark, #283138);
-    text-shadow: none;
-    transition: color 0.3s var(--ease-smooth), text-shadow 0.3s var(--ease-smooth);
-}
-
-#hero-title.is-on-dark,
-.home-hero-text.is-on-dark {
-    color: var(--color-ivory, #fefcf6);
-    text-shadow: 0 2px 16px rgb(0 0 0 / 0.5);
+    text-shadow: var(--hero-text-shadow);
 }
 
 .home-hero-text {
