@@ -831,6 +831,19 @@ footer.is-on-dark {
     width: 100%;
 }
 
+/* Mosaic placed directly inside <main> (e.g. hb.html), not inside an .article-section
+   (e.g. knowledge.html). In that case it does not inherit the width limits of
+   .article-section, so it is given the same box here: same max-width and same side
+   padding, which makes it exactly as wide as .article-text.
+   It also gets the same fade-in as the other blocks of the page. */
+main > .map-wrapper {
+    max-width: 1200px;           /* same as .article-section */
+    padding: 0 2.5rem;           /* same as .article-section */
+    margin: 0 auto;              /* centred in <main> */
+    opacity: 0;
+    animation: fadeInSection 0.6s ease-out 0.6s forwards;
+}
+
 /* Inner multi-column mosaic — flows naturally on the main webpage */
 .map-mosaic {
     column-count: 3;

@@ -52,8 +52,31 @@ document.addEventListener('DOMContentLoaded', () => {
 // ------------------- map mosaic + carousel ----------------- //
 
 document.addEventListener('DOMContentLoaded', () => {
-    const carousel = document.getElementById('map-carousel');
-    if (!carousel) return; // this page has no map carousel, stop here
+    // Pages with a mosaic normally contain the <div id="map-carousel"> markup (see knowledge.html).
+    // hb.html does not: without it the script used to stop here and the tiles never opened.
+    // So if the page has a mosaic but no carousel markup, it is built here (same structure
+    // as in knowledge.html) and added at the end of <body>.
+    let carousel = document.getElementById('map-carousel');
+
+    if (!carousel) {
+        if (!document.querySelector('.map-wrapper')) return; // no mosaic on this page: nothing to do
+
+        carousel = document.createElement('div');
+        carousel.id = 'map-carousel';
+        carousel.className = 'lightbox';
+        carousel.innerHTML = `
+            <div class="lightbox-content">
+                <span class="lightbox-close map-carousel-close">&times;</span>
+                <img id="map-carousel-img" src="" alt="">
+
+                <div class="map-carousel-controls">
+                    <span class="map-carousel-arrow map-carousel-prev" aria-label="Previous map">&#10094;</span>
+                    <p id="map-caption"></p>
+                    <span class="map-carousel-arrow map-carousel-next" aria-label="Next map">&#10095;</span>
+                </div>
+            </div>`;
+        document.body.appendChild(carousel);
+    }
 
     const carouselImg = document.getElementById('map-carousel-img');
     const mapCaption = document.getElementById('map-caption') || carousel.querySelector('.caption');

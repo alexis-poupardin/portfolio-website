@@ -1,6 +1,6 @@
 /* ---------- 1. Settings: tweak the design from here ---------- */
 :root {
-    --hero-overlay-opacity: 20%; /* light overlay on the hero image: 0% = none, 100% = solid */
+    --hero-overlay-opacity: 30%; /* light overlay on the hero image: 0% = none, 100% = solid */
 
     --appear-duration: 2s;       /* longer = smoother entrance (logo, headings, nav...) */
 
