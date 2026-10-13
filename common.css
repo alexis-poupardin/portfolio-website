@@ -83,6 +83,7 @@ body {
    the logo, title and motto there with the --hero-* variables) */
 header {
     --interface-ink: var(--color-dark);
+    --logo-color: var(--color-dark);     /* colour of the H&B logo (index.css overrides it on the homepage) */
     position: relative;
     width: 100%;
     padding: var(--header-top) var(--header-left) 0;
@@ -104,13 +105,19 @@ header {
     grid-row: 1 / span 2;
 }
 
-.logo-HB img {
+.logo-HB a {
+    display: block;
+}
+
+/* The logo is an inline <svg> (see header.html): its paths have no fill of their own,
+   so they take the `fill` set here and it can be changed with --logo-color */
+.logo-HB .logo-svg {
     display: block;
     width: var(--logo-width);
     max-width: none;
     height: auto;
-    filter: none;
-    transition: filter 0.3s var(--ease-smooth);
+    fill: var(--logo-color);
+    transition: fill 0.3s var(--ease-smooth);
 }
 
 /* The motto is centred on the middle axis of the title */
@@ -359,12 +366,13 @@ main {
 
 /* --------------------- language switcher -------------------------- */
 
-/* Fixed like the nav bar, so it follows it when scrolling. The select sits one label
-   height below the top line; the label is taken out of the flow and written above it,
-   so the box stays the select alone and the chevron (::after) keeps its position. */
+/* Not sticky (unlike the nav bar): it stays at its place at the top of the page and scrolls
+   away with it. The select sits one label height below the top line; the label is taken
+   out of the flow and written above it, so the box stays the select alone and the
+   chevron (::after) keeps its position. */
 .language-switcher {
     --interface-ink: var(--color-dark);
-    position: fixed;
+    position: absolute;
     top: calc(var(--header-top) + var(--label-space));
     right: 2rem;
     display: flex;
@@ -550,6 +558,13 @@ footer.is-on-dark {
     
     .footer-text, .top-button {
         justify-self: center;
+    }
+
+    /* The footer's text-align: center above must not reach the two paragraphs:
+       both start at the same left edge (the block itself stays centred in the footer) */
+    .footer-text,
+    .footer-text p {
+        text-align: left;
     }
     
     header {
@@ -822,19 +837,6 @@ footer.is-on-dark {
    the mosaic directly on the main webpage without a nested scrollbar */
 .map-wrapper {
     width: 100%;
-}
-
-/* Mosaic placed directly inside <main> (e.g. hb.html), not inside an .article-section
-   (e.g. knowledge.html). In that case it does not inherit the width limits of
-   .article-section, so it is given the same box here: same max-width and same side
-   padding, which makes it exactly as wide as .article-text.
-   It also gets the same fade-in as the other blocks of the page. */
-main > .map-wrapper {
-    max-width: 1200px;           /* same as .article-section */
-    padding: 0 2.5rem;           /* same as .article-section */
-    margin: 0 auto;              /* centred in <main> */
-    opacity: 0;
-    animation: fadeInSection 0.6s ease-out 0.6s forwards;
 }
 
 /* Inner multi-column mosaic — flows naturally on the main webpage */

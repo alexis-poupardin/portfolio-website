@@ -52,10 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ------------------- map mosaic + carousel ----------------- //
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Pages with a mosaic normally contain the <div id="map-carousel"> markup (see knowledge.html).
-    // hb.html does not: without it the script used to stop here and the tiles never opened.
-    // So if the page has a mosaic but no carousel markup, it is built here (same structure
-    // as in knowledge.html) and added at the end of <body>.
     let carousel = document.getElementById('map-carousel');
 
     if (!carousel) {
@@ -85,8 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = carousel.querySelector('.map-carousel-next');
     const lightboxContent = carousel.querySelector('.lightbox-content');
 
-    // The tiles currently being browsed (all .map-tile elements that share
-    // the .map-wrapper the visitor clicked into), and which one is active
     let currentTiles = [];
     let currentIndex = 0;
 
@@ -373,7 +367,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ---------------- autoscrolling to <section class="article-section"> ------------- //
 
+// The auto-scroll is switched off on mobile devices (small screens or touch-only devices).
+// Edit this media query to change what counts as "mobile".
+const MOBILE_QUERY = '(max-width: 600px), (hover: none) and (pointer: coarse)';
+
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.matchMedia(MOBILE_QUERY).matches) return;   // mobile: no auto-scroll
+
     const targetSection = document.querySelector('.article-section');
 
     if (targetSection) {
@@ -423,7 +423,6 @@ function smoothScrollTo(element, duration = 1000) {
 // language switcher, footer).  They receive .is-on-dark for ivory text; otherwise
 // they use dark ink.
 // A section can force its result with data-ui-theme="dark" / "light".
-// data-nav-theme remains supported for existing page markup.
 
 (() => {
     const DARK_CLASS = 'is-on-dark';
@@ -433,10 +432,6 @@ function smoothScrollTo(element, duration = 1000) {
         { root: '.navigation', probe: 'nav > ul' },
         { root: '.language-switcher', probe: 'select' },
         { root: 'footer', probe: '.footer-text' },
-        // The header (logo, title, motto) and the hero texts (#hero-title, .home-hero-text)
-        // are NOT listed here any more: on the homepage their colours are set by hand with the
-        // --hero-* variables at the top of index.css. On the other pages the header sits on the
-        // light page background, so it keeps its default dark colour (see common.css).
     ];
 
     const sampleCanvas = document.createElement('canvas');

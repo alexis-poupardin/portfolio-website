@@ -2,8 +2,7 @@
 :root {
     --hero-overlay-opacity: 30%; /* light overlay on the hero image: 0% = none, 100% = solid */
 
-    /* Colours of the homepage texts and logo. They are fixed (no automatic light/dark switch):
-       pick the colour that reads best on your hero image. Any CSS colour works. */
+    /* Colours of the homepage texts and logo. They are fixed (no automatic light/dark switch) */
     --hero-title-color: #fefcf6;            /* "Alexis Poupardin" (#hero-title) */
     --hero-text-color: #fefcf6;             /* "GIS portfolio" (.home-hero-text) */
     --hero-text-shadow: 0 2px 16px rgb(0 0 0 / 0.9);  /* shadow behind those two texts; "none" = no shadow */
@@ -60,14 +59,22 @@ body.homepage .logo-HB,
 body.homepage .main-headings,
 body.homepage .motto,
 body.homepage .language-switcher,
-body.homepage .navigation > nav > ul {
+body.homepage .navigation > nav > ul::before,
+body.homepage .navigation > nav > ul > li {
         animation: appear var(--appear-duration) var(--ease-smooth) backwards;
 }
+
+/* NAV BAR: the entrance is NOT played on the <ul> itself. An element with opacity < 1 (even
+   during an animation) becomes a "backdrop root": the backdrop-filter of its glass layer then
+   only sees what is inside the <ul> (nothing) and the blur is missing until the animation ends.
+   So the glass layer (::before, which carries its own blur) and the links (<li>) fade in
+   separately: the glass is blurred from the very first frame. */
 body.homepage .logo-HB                 { animation-delay: var(--delay-logo); }
 body.homepage .main-headings           { animation-delay: var(--delay-headings); }
 body.homepage .motto                   { animation-delay: calc(var(--delay-headings) + 0.15s); }
 body.homepage .language-switcher,
-body.homepage .navigation > nav > ul   { animation-delay: var(--delay-nav); }
+body.homepage .navigation > nav > ul::before,
+body.homepage .navigation > nav > ul > li { animation-delay: var(--delay-nav); }
 
 /* Hero title, then hero text. They play on page load (not on scroll): a CSS animation starts
    by itself as soon as the element is rendered. `backwards` keeps them hidden during their delay. */
@@ -92,8 +99,7 @@ body.homepage header#top {
 }
 
 /* Colours of the logo, title and motto on the homepage: they come from the --hero-* variables
-   in section 1. `body.homepage` makes these rules more specific than the ones of common.css
-   (which colour them with --interface-ink on the other pages), whatever the loading order. */
+   in section 1 */
 body.homepage .main-headings .title {
     color: var(--hero-header-title-color);
 }
@@ -101,17 +107,10 @@ body.homepage .motto {
     color: var(--hero-motto-color);
 }
 
-/* The logo is an SVG loaded with <img>, so its colour cannot be changed with `color`.
-   Trick: the SVG is used as a mask over a plain coloured background, and the <img> picture
-   itself is pushed out of its box (object-position) so only the coloured silhouette is left. */
-body.homepage .logo-HB img {
-    background-color: var(--hero-logo-color);
-    -webkit-mask: url("./LOGOS/MY_LOGO/Logo_HB.svg") center / contain no-repeat;
-    mask: url("./LOGOS/MY_LOGO/Logo_HB.svg") center / contain no-repeat;
-    object-fit: none;
-    object-position: -9999px 0;
-    filter: none;
-    transition: background-color 0.3s var(--ease-smooth);
+/* The logo is an inline <svg> styled in common.css (fill: var(--logo-color)):
+   on the homepage it only needs another value for that variable */
+body.homepage header#top {
+    --logo-color: var(--hero-logo-color);
 }
 
 

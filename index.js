@@ -1,21 +1,7 @@
 
 // ---------------- carousel-unfolding-map --------------- //
 
-/*
- * Homepage carousel, turned into an unfolding paper map.
- * (Inspired by https://www.frontend.fyi/tutorials/making-a-foldable-map-with-framer-motion,
- *  rewritten in plain JS + CSS: no React / Framer Motion needed.)
- *
- * How it works
- * - Each slide's <img> is cut into 3 panels (left / centre / right) built by this script.
- * - This script only animates ONE number per map: --unfold, from 0 (folded) to 1 (open),
- *   written on the .carousel-image-frame element. All the geometry (panel shifts, skew,
- *   centre panel growing, tilt...) is computed from that number in index.css.
- * - The first unfolding starts when the carousel scrolls into view (this also covers the
- *   click on the compass, which scrolls to #lower-section).
- * - An arrow, a dot or a swipe folds the current map back, then unfolds the new one.
- *
- */
+
 function carouselUnfoldingMap() {
 
     /* ================= SETTINGS: tweak the animation from here ================= */
