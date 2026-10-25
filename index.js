@@ -8,6 +8,7 @@ function carouselUnfoldingMap() {
     const UNFOLD_DURATION     = 2000;  // ms: a map unfolds in 2 s
     const FOLD_DURATION       = 2000;  // ms: folding back = the unfolding played in reverse
     const TRANSITION_DURATION = 1000;  // ms: short slide transition between pictures
+    const DISPLAY_DURATION    = 5000;  // ms: active image is displayed 5 seconds before advancing
     const START_DELAY         = 400;   // ms: pause between reaching the section and the first unfolding
     const BORDERS_DELAY       = 100;   // ms: once unfolded, wait this long before the borders vanish
     const BORDERS_FADE        = 500;   // ms: time the borders / shadows take to fade out
@@ -61,6 +62,8 @@ function carouselUnfoldingMap() {
     let hasStarted = false;   // true once the first unfolding was launched (or the visitor clicked)
     let observer = null;
     let dots = [];            // dynamically managed to always match slides.length
+    let autoCycleTimer = null;   // timer for the 5-second automatic progression
+    let autoCycleEnabled = true; // disabled permanently once the visitor interacts
 
     const wrapIndex = (index) => (index + slides.length) % slides.length;
     const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms * speed));
@@ -129,10 +132,36 @@ function carouselUnfoldingMap() {
     function stopAnimation() {
         window.cancelAnimationFrame(frameId);
         clearTransitionStyles();
+        if (autoCycleTimer) {
+            window.clearTimeout(autoCycleTimer);
+            autoCycleTimer = null;
+        }
         if (settlePending) {
             settlePending(false);
             settlePending = null;
         }
+    }
+
+    /* ================= Automatic cycling ================= */
+    // Permanently cancels automatic cycling once the visitor interacts
+    function cancelAutoCycle() {
+        autoCycleEnabled = false;
+        if (autoCycleTimer) {
+            window.clearTimeout(autoCycleTimer);
+            autoCycleTimer = null;
+        }
+    }
+
+    // Displays the active image for 5 seconds, then advances to the next picture
+    function scheduleAutoCycle() {
+        if (!autoCycleEnabled || !hasMultiple) return;
+        if (autoCycleTimer) {
+            window.clearTimeout(autoCycleTimer);
+        }
+        autoCycleTimer = window.setTimeout(() => {
+            if (!autoCycleEnabled) return;
+            goTo(targetIndex + 1, 1, false);
+        }, DISPLAY_DURATION);
     }
 
     // Moves `progress` to `target` (0 or 1). Resolves true when finished, false if cancelled.
@@ -342,11 +371,17 @@ function carouselUnfoldingMap() {
         await wait(BORDERS_FADE);
         if (isOutdated()) return;
         slide.classList.add('is-settled');
+
+        // The active image is displayed 5 seconds before the next picture is automatically shown
+        scheduleAutoCycle();
     }
 
     /* ================= Navigation: arrows, dots, swipe ================= */
-    function goTo(index, direction) {
+    function goTo(index, direction, isManual = true) {
         if (!hasMultiple) return;
+        if (isManual) {
+            cancelAutoCycle();
+        }
         const wanted = wrapIndex(index);
         if (wanted === targetIndex) return;
 
@@ -372,10 +407,16 @@ function carouselUnfoldingMap() {
     };
 
     if (previousButton) {
-        previousButton.addEventListener('click', showPrevious);
+        previousButton.addEventListener('click', () => {
+            cancelAutoCycle();
+            showPrevious();
+        });
     }
     if (nextButton) {
-        nextButton.addEventListener('click', showNext);
+        nextButton.addEventListener('click', () => {
+            cancelAutoCycle();
+            showNext();
+        });
     }
 
     // Creates dots dynamically based on the number of slides
@@ -392,7 +433,10 @@ function carouselUnfoldingMap() {
                 dot.className = 'carousel-dot';
                 dot.type = 'button';
                 dot.setAttribute('aria-label', `Show image ${index + 1}`);
-                dot.addEventListener('click', () => goTo(index));
+                dot.addEventListener('click', () => {
+                    cancelAutoCycle();
+                    goTo(index);
+                });
                 dotsContainer.append(dot);
                 return dot;
             });
@@ -440,6 +484,8 @@ function carouselUnfoldingMap() {
 
         if (!hasMultiple) return;
 
+        cancelAutoCycle();
+
         if (distX > 0) {
             showPrevious();
         } else {
@@ -484,6 +530,8 @@ function carouselUnfoldingMap() {
         }
 
         if (!hasMultiple) return;
+
+        cancelAutoCycle();
 
         if (distX > 0) {
             showPrevious();
