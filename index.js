@@ -17,6 +17,10 @@ function carouselUnfoldingMap() {
     const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
     /* ================= Elements ================= */
+    if (typeof updateMobileNav === 'function') {
+        updateMobileNav();
+    }
+
     const carousel = document.querySelector('#carousel-index');
     if (!carousel) return;
 
@@ -44,9 +48,7 @@ function carouselUnfoldingMap() {
         nextButton.hidden = !hasMultiple;
     }
 
-    // Visitors who asked their system for less motion get the maps without any animation.
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const speed = prefersReducedMotion ? 0 : 1;   // multiplies every duration: 0 = instant
+    const speed = 1;
 
     /* ================= State ================= */
     // Starts with the first article class="carousel-slide" in index.html starting from the top
@@ -57,7 +59,6 @@ function carouselUnfoldingMap() {
     let frameId = 0;          // id of the running requestAnimationFrame
     let settlePending = null; // resolves the promise of the running animation
     let hasStarted = false;   // true once the first unfolding was launched (or the visitor clicked)
-    let swipeStart = null;
     let observer = null;
     let dots = [];            // dynamically managed to always match slides.length
 
@@ -172,9 +173,9 @@ function carouselUnfoldingMap() {
     function animateSlideTransition(fromSlide, toSlide, direction, fullDuration) {
         stopAnimation();
 
-        const duration = fullDuration * speed;
+        const duration = fullDuration || 1000;
 
-        if (duration <= 0 || !fromSlide || !toSlide) {
+        if (!fromSlide || !toSlide) {
             return Promise.resolve(true);
         }
 
@@ -185,15 +186,22 @@ function carouselUnfoldingMap() {
         const toFrame = getFrame(toSlide);
         if (toFrame) {
             toFrame.style.setProperty('--unfold', '0');
+            const toImg = toSlide.querySelector('img');
+            if (toImg) {
+                const src = toImg.currentSrc || toImg.src;
+                if (src) toFrame.style.setProperty('--map-image', `url("${src}")`);
+            }
         }
         toSlide.classList.remove('is-borderless', 'is-settled');
 
+        fromSlide.classList.add('is-active');
         fromSlide.style.visibility = 'visible';
         fromSlide.style.pointerEvents = 'none';
         fromSlide.style.willChange = 'transform, opacity';
         fromSlide.style.transform = 'translateX(0%)';
         fromSlide.style.opacity = '1';
 
+        toSlide.classList.add('is-active');
         toSlide.style.visibility = 'visible';
         toSlide.style.pointerEvents = 'none';
         toSlide.style.willChange = 'transform, opacity';
@@ -391,46 +399,101 @@ function carouselUnfoldingMap() {
         }
     }
 
-    carousel.addEventListener('pointerdown', (event) => {
+    // Native touch swipe handling for mobile devices (iOS, iPadOS, Android)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchDeltaX = 0;
+    let touchDeltaY = 0;
+
+    carousel.addEventListener('touchstart', (event) => {
         if (!hasMultiple) return;
-        if (event.pointerType !== 'touch') return;
         if (event.target.closest('.carousel-control, .carousel-dot')) return;
+        const touch = event.touches[0];
+        if (!touch) return;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchDeltaX = 0;
+        touchDeltaY = 0;
+    }, { passive: true });
 
-        swipeStart = {
-            id: event.pointerId,
-            x: event.clientX,
-            y: event.clientY
-        };
+    carousel.addEventListener('touchmove', (event) => {
+        if (!touchStartX) return;
+        const touch = event.touches[0];
+        if (!touch) return;
+        touchDeltaX = touch.clientX - touchStartX;
+        touchDeltaY = touch.clientY - touchStartY;
+    }, { passive: true });
 
-        carousel.setPointerCapture?.(event.pointerId);
-    });
-
-    carousel.addEventListener('pointerup', (event) => {
-        if (!swipeStart || event.pointerId !== swipeStart.id) return;
-
-        const distanceX = event.clientX - swipeStart.x;
-        const distanceY = event.clientY - swipeStart.y;
-        swipeStart = null;
-
-        carousel.releasePointerCapture?.(event.pointerId);
+    carousel.addEventListener('touchend', () => {
+        if (!touchStartX) return;
+        const distX = touchDeltaX;
+        const distY = touchDeltaY;
+        touchStartX = 0;
+        touchStartY = 0;
+        touchDeltaX = 0;
+        touchDeltaY = 0;
 
         /* Ignore taps and vertical page-scroll gestures. */
-        if (Math.abs(distanceX) < 48 || Math.abs(distanceX) <= Math.abs(distanceY)) {
+        if (Math.abs(distX) < 40 || Math.abs(distX) <= Math.abs(distY)) {
             return;
         }
 
         if (!hasMultiple) return;
 
-        if (distanceX > 0) {
+        if (distX > 0) {
             showPrevious();
         } else {
             showNext();
         }
+    }, { passive: true });
+
+    // Pointer-based drag handling for desktop mouse/pen interaction
+    let isPointerDragging = false;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerDeltaX = 0;
+    let pointerDeltaY = 0;
+
+    carousel.addEventListener('pointerdown', (event) => {
+        if (!hasMultiple) return;
+        if (event.pointerType === 'touch') return; // touch handled by touchstart/touchend
+        if (event.target.closest('.carousel-control, .carousel-dot')) return;
+        isPointerDragging = true;
+        pointerStartX = event.clientX;
+        pointerStartY = event.clientY;
+        pointerDeltaX = 0;
+        pointerDeltaY = 0;
     });
 
-    carousel.addEventListener('pointercancel', () => {
-        swipeStart = null;
+    carousel.addEventListener('pointermove', (event) => {
+        if (!isPointerDragging) return;
+        pointerDeltaX = event.clientX - pointerStartX;
+        pointerDeltaY = event.clientY - pointerStartY;
     });
+
+    const endPointerDrag = () => {
+        if (!isPointerDragging) return;
+        isPointerDragging = false;
+        const distX = pointerDeltaX;
+        const distY = pointerDeltaY;
+        pointerDeltaX = 0;
+        pointerDeltaY = 0;
+
+        if (Math.abs(distX) < 40 || Math.abs(distX) <= Math.abs(distY)) {
+            return;
+        }
+
+        if (!hasMultiple) return;
+
+        if (distX > 0) {
+            showPrevious();
+        } else {
+            showNext();
+        }
+    };
+
+    carousel.addEventListener('pointerup', endPointerDrag);
+    carousel.addEventListener('pointercancel', () => { isPointerDragging = false; });
 
     /* ================= First unfolding: when the visitor reaches the section ================= */
     function launchFirstUnfolding() {

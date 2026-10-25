@@ -427,35 +427,27 @@ function updateMobileNav() {
     const nav = document.querySelector('.navigation');
     if (!nav) return;
 
-    if (window.innerWidth > 960) {
+    const isMobile = window.matchMedia('(max-width: 960px)').matches;
+    if (!isMobile) {
+        nav.style.top = '';
         nav.style.removeProperty('--mobile-nav-top');
         return;
     }
 
-    const rootStyle = getComputedStyle(document.documentElement);
-    const rem = parseFloat(rootStyle.fontSize) || 16;
-
-    function parseCssLength(val, defaultRem) {
-        if (!val) return defaultRem * rem;
-        const str = val.trim();
-        const num = parseFloat(str);
-        if (isNaN(num)) return defaultRem * rem;
-        if (str.endsWith('px')) return num;
-        return num * rem;
-    }
-
-    const headerTop = parseCssLength(rootStyle.getPropertyValue('--header-top'), 1);
-    const logoWidth = parseCssLength(rootStyle.getPropertyValue('--logo-width'), 4);
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const headerTop = 1 * rem;
+    const logoWidth = 4 * rem;
     const extraGap = 0.75 * rem;
 
     const targetTop = headerTop;
     const initialTop = headerTop + logoWidth + extraGap;
     const maxShift = initialTop - targetTop;
 
-    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
     const shift = Math.min(Math.max(scrollY, 0), maxShift);
     const currentTop = initialTop - shift;
 
+    nav.style.top = `${currentTop}px`;
     nav.style.setProperty('--mobile-nav-top', `${currentTop}px`);
 }
 
@@ -594,6 +586,8 @@ function updateMobileNav() {
     }
 
     window.addEventListener('scroll', queueUpdate, { passive: true });
+    document.addEventListener('scroll', queueUpdate, { passive: true });
+    window.addEventListener('touchmove', queueUpdate, { passive: true });
 
     window.addEventListener('resize', () => {
         updateMobileNav();

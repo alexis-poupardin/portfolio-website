@@ -322,6 +322,7 @@ body.homepage header#top {
     position: relative;
     width: min(100%, 96rem);
     margin: clamp(7rem, 13vh, 10rem) auto 1.25rem;
+    overflow-x: hidden;
     overflow-x: clip;            /* no sideways scroll, but shadows can still go up and down */
     isolation: isolate;
     touch-action: pan-y;         /* horizontal swipes belong to the carousel, vertical ones scroll the page */
@@ -331,6 +332,7 @@ body.homepage header#top {
 .carousel-viewport {
     position: relative;
     height: var(--display-height);
+    overflow: hidden;
 }
 .carousel-track {
     position: relative;
