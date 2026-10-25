@@ -533,7 +533,7 @@ footer.is-on-dark {
     .navigation {
         left: 1rem;
         right: 1rem;
-        top: calc(var(--header-top) + var(--logo-width) + 0.75rem);
+        top: var(--mobile-nav-top, calc(var(--header-top) + var(--logo-width) + 0.75rem));
     }
 }
 

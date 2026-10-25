@@ -5,12 +5,13 @@
 function carouselUnfoldingMap() {
 
     /* ================= SETTINGS: tweak the animation from here ================= */
-    const UNFOLD_DURATION = 2000;  // ms: a map unfolds in 2 s
-    const FOLD_DURATION   = 2000;  // ms: folding back = the unfolding played in reverse
-    const START_DELAY     = 400;   // ms: pause between reaching the section and the first unfolding
-    const BORDERS_DELAY   = 100;  // ms: once unfolded, wait this long before the borders vanish
-    const BORDERS_FADE    = 500;   // ms: time the borders / shadows take to fade out
-    const VISIBLE_RATIO   = 0.5;   // share of the carousel that must be on screen to launch it
+    const UNFOLD_DURATION     = 2000;  // ms: a map unfolds in 2 s
+    const FOLD_DURATION       = 2000;  // ms: folding back = the unfolding played in reverse
+    const TRANSITION_DURATION = 1000;  // ms: short slide transition between pictures
+    const START_DELAY         = 400;   // ms: pause between reaching the section and the first unfolding
+    const BORDERS_DELAY       = 100;   // ms: once unfolded, wait this long before the borders vanish
+    const BORDERS_FADE        = 500;   // ms: time the borders / shadows take to fade out
+    const VISIBLE_RATIO       = 0.5;   // share of the carousel that must be on screen to launch it
 
     // Ease-in-out (cubic): t goes 0 -> 1, the result goes 0 -> 1 with a soft start and end.
     const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
@@ -48,10 +49,9 @@ function carouselUnfoldingMap() {
     const speed = prefersReducedMotion ? 0 : 1;   // multiplies every duration: 0 = instant
 
     /* ================= State ================= */
-    // If a slide is marked is-active in HTML, use it; otherwise default gracefully to slide 0
-    const markedIndex = slides.findIndex((slide) => slide.classList.contains('is-active'));
-    let activeIndex = markedIndex >= 0 ? markedIndex : 0;      // map currently on screen
-    let targetIndex = activeIndex;                             // map the visitor asked for (differs from activeIndex while folding)
+    // Starts with the first article class="carousel-slide" in index.html starting from the top
+    let activeIndex = 0;                                       // map currently on screen
+    let targetIndex = 0;                                       // map the visitor asked for (differs from activeIndex while folding)
     let progress = 0;         // 0 = folded, 1 = fully unfolded
     let runId = 0;            // increases at each request, so older sequences stop by themselves
     let frameId = 0;          // id of the running requestAnimationFrame
@@ -113,9 +113,21 @@ function carouselUnfoldingMap() {
         }
     }
 
+    // Removes any temporary inline styles applied during slide transitions.
+    function clearTransitionStyles() {
+        slides.forEach((slide) => {
+            slide.style.removeProperty('transform');
+            slide.style.removeProperty('opacity');
+            slide.style.removeProperty('visibility');
+            slide.style.removeProperty('pointer-events');
+            slide.style.removeProperty('will-change');
+        });
+    }
+
     // Cancels the running animation (its promise resolves with false).
     function stopAnimation() {
         window.cancelAnimationFrame(frameId);
+        clearTransitionStyles();
         if (settlePending) {
             settlePending(false);
             settlePending = null;
@@ -154,6 +166,72 @@ function carouselUnfoldingMap() {
         });
     }
 
+    // Short slide transition between pictures (duration: 1 second).
+    // direction > 0: unfolding new picture from the right (current -> left, new from right -> middle)
+    // direction < 0: unfolding picture from the left (current -> right, new from left -> middle)
+    function animateSlideTransition(fromSlide, toSlide, direction, fullDuration) {
+        stopAnimation();
+
+        const duration = fullDuration * speed;
+
+        if (duration <= 0 || !fromSlide || !toSlide) {
+            return Promise.resolve(true);
+        }
+
+        const exitSign = direction > 0 ? -1 : 1;
+        const enterSign = direction > 0 ? 1 : -1;
+
+        // Ensure toSlide is prepared in folded state (progress = 0)
+        const toFrame = getFrame(toSlide);
+        if (toFrame) {
+            toFrame.style.setProperty('--unfold', '0');
+        }
+        toSlide.classList.remove('is-borderless', 'is-settled');
+
+        fromSlide.style.visibility = 'visible';
+        fromSlide.style.pointerEvents = 'none';
+        fromSlide.style.willChange = 'transform, opacity';
+        fromSlide.style.transform = 'translateX(0%)';
+        fromSlide.style.opacity = '1';
+
+        toSlide.style.visibility = 'visible';
+        toSlide.style.pointerEvents = 'none';
+        toSlide.style.willChange = 'transform, opacity';
+        toSlide.style.transform = `translateX(${enterSign * 100}%)`;
+        toSlide.style.opacity = '0';
+
+        return new Promise((resolve) => {
+            settlePending = resolve;
+            const startTime = performance.now();
+
+            const step = (now) => {
+                const t = Math.min(Math.max((now - startTime) / duration, 0), 1);
+                const easedT = ease(t);
+
+                // Current folded map goes to the side until it disappears / fades away
+                const fromX = exitSign * 100 * easedT;
+                const fromOpacity = 1 - easedT;
+                fromSlide.style.transform = `translateX(${fromX.toFixed(2)}%)`;
+                fromSlide.style.opacity = fromOpacity.toFixed(4);
+
+                // New folded map comes from the side into the middle
+                const toX = enterSign * 100 * (1 - easedT);
+                const toOpacity = easedT;
+                toSlide.style.transform = `translateX(${toX.toFixed(2)}%)`;
+                toSlide.style.opacity = toOpacity.toFixed(4);
+
+                if (t < 1) {
+                    frameId = window.requestAnimationFrame(step);
+                } else {
+                    settlePending = null;
+                    clearTransitionStyles();
+                    resolve(true);
+                }
+            };
+            frameId = window.requestAnimationFrame(step);
+        });
+    }
+
     /* ================= Showing a map ================= */
     function updateDots(index) {
         dots.forEach((dot, dotIndex) => {
@@ -178,6 +256,11 @@ function carouselUnfoldingMap() {
             slide.classList.toggle('is-active', isActive);
             slide.classList.remove('is-borderless', 'is-settled');
             slide.setAttribute('aria-hidden', String(!isActive));
+            slide.style.removeProperty('transform');
+            slide.style.removeProperty('opacity');
+            slide.style.removeProperty('visibility');
+            slide.style.removeProperty('pointer-events');
+            slide.style.removeProperty('will-change');
 
             // Keep accessibility label in sync with current slide count
             if (hasMultiple) {
@@ -188,9 +271,9 @@ function carouselUnfoldingMap() {
         setProgress(0);
     }
 
-    // Full sequence: fold the current map back, swap, unfold the new one, then clean the borders.
+    // Full sequence: fold the current map back, slide transition (1 s), swap, unfold the new one, then clean the borders.
     // If the visitor asks for another map meanwhile, runId changes and this sequence stops.
-    async function showSlide(index) {
+    async function showSlide(index, direction = 1) {
         const myRun = ++runId;
         const isOutdated = () => myRun !== runId;
 
@@ -202,11 +285,25 @@ function carouselUnfoldingMap() {
         }
 
         if (index !== activeIndex) {
+            const fromSlide = slides[activeIndex];
+            const toSlide = slides[index];
+
+            // Pre-decode target image early so it's ready when sliding into view
+            const targetImg = toSlide?.querySelector('img');
+            if (targetImg && targetImg.decode) {
+                targetImg.decode().catch(() => {});
+            }
+
             // 1. Fold the current map back (reversed animation).
             await animateTo(0, FOLD_DURATION);
             if (isOutdated()) return;
 
-            // 2. Swap to the new map, folded.
+            // 2. Short slide transition between pictures (duration : 1 second).
+            // Current folded map goes to the side and fades away; new folded map comes in from the opposite side.
+            await animateSlideTransition(fromSlide, toSlide, direction, TRANSITION_DURATION);
+            if (isOutdated()) return;
+
+            // 3. Swap to the new map, folded at middle.
             render(index);
         }
 
@@ -224,40 +321,46 @@ function carouselUnfoldingMap() {
         }
         if (isOutdated()) return;
 
-        // 3. Unfold (2 s).
+        // 4. When the new picture reaches the middle, unfold as usual (2 s).
         await animateTo(1, UNFOLD_DURATION);
         if (isOutdated()) return;
 
-        // 4. 1.5 s later the borders, shadows and crease shading fade away...
+        // 5. 1.5 s later the borders, shadows and crease shading fade away...
         await wait(BORDERS_DELAY);
         if (isOutdated()) return;
         slide.classList.add('is-borderless');
 
-        // 5. ...then the three panels are replaced by the plain image (nothing left over it).
+        // 6. ...then the three panels are replaced by the plain image (nothing left over it).
         await wait(BORDERS_FADE);
         if (isOutdated()) return;
         slide.classList.add('is-settled');
     }
 
     /* ================= Navigation: arrows, dots, swipe ================= */
-    function goTo(index) {
+    function goTo(index, direction) {
         if (!hasMultiple) return;
         const wanted = wrapIndex(index);
         if (wanted === targetIndex) return;
+
+        // Determine direction if not provided (e.g. from dot click):
+        // 1 = new picture comes from right; -1 = new picture comes from left
+        const dir = direction !== undefined
+            ? direction
+            : (wanted > targetIndex ? 1 : (wanted < targetIndex ? -1 : (wanted > activeIndex ? 1 : -1)));
 
         targetIndex = wanted;
         hasStarted = true;                 // the visitor took over: no automatic first unfolding
         if (observer) observer.disconnect();
 
         updateDots(wanted);                // immediate feedback on the dots
-        showSlide(wanted);
+        showSlide(wanted, dir);
     }
 
     const showPrevious = () => {
-        if (hasMultiple) goTo(targetIndex - 1);
+        if (hasMultiple) goTo(targetIndex - 1, -1);
     };
     const showNext = () => {
-        if (hasMultiple) goTo(targetIndex + 1);
+        if (hasMultiple) goTo(targetIndex + 1, 1);
     };
 
     if (previousButton) {

@@ -418,6 +418,50 @@ function smoothScrollTo(element, duration = 1000) {
 
 
 
+// ---------------- mobile navigation bar scroll behavior ----------------- //
+// On mobile devices (<= 960px), the navigation bar moves up as the visitor
+// scrolls down, taking the place of the header and language switcher once
+// scrolled down enough, and pinning at --header-top.
+
+function updateMobileNav() {
+    const nav = document.querySelector('.navigation');
+    if (!nav) return;
+
+    if (window.innerWidth > 960) {
+        nav.style.removeProperty('--mobile-nav-top');
+        return;
+    }
+
+    const rootStyle = getComputedStyle(document.documentElement);
+    const rem = parseFloat(rootStyle.fontSize) || 16;
+
+    function parseCssLength(val, defaultRem) {
+        if (!val) return defaultRem * rem;
+        const str = val.trim();
+        const num = parseFloat(str);
+        if (isNaN(num)) return defaultRem * rem;
+        if (str.endsWith('px')) return num;
+        return num * rem;
+    }
+
+    const headerTop = parseCssLength(rootStyle.getPropertyValue('--header-top'), 1);
+    const logoWidth = parseCssLength(rootStyle.getPropertyValue('--logo-width'), 4);
+    const extraGap = 0.75 * rem;
+
+    const targetTop = headerTop;
+    const initialTop = headerTop + logoWidth + extraGap;
+    const maxShift = initialTop - targetTop;
+
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const shift = Math.min(Math.max(scrollY, 0), maxShift);
+    const currentTop = initialTop - shift;
+
+    nav.style.setProperty('--mobile-nav-top', `${currentTop}px`);
+}
+
+
+
+
 // ------------------- adaptive interface contrast ----------------- //
 // Checks the background behind the shared interface elements (navigation bar,
 // language switcher, footer).  They receive .is-on-dark for ivory text; otherwise
@@ -537,6 +581,7 @@ function smoothScrollTo(element, duration = 1000) {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
+            updateMobileNav();
             update();
             ticking = false;
         });
@@ -550,19 +595,26 @@ function smoothScrollTo(element, duration = 1000) {
 
     window.addEventListener('scroll', queueUpdate, { passive: true });
 
-    window.addEventListener('resize', update);
+    window.addEventListener('resize', () => {
+        updateMobileNav();
+        update();
+    });
     window.addEventListener('load', () => {
+        updateMobileNav();
         watchImages();
         update();
     });
     document.addEventListener('partials-loaded', () => {
+        updateMobileNav();
         watchImages();
         update();
     });
     document.addEventListener('DOMContentLoaded', () => {
+        updateMobileNav();
         watchImages();
         update();
     });
+    updateMobileNav();
     watchImages();
     update();
 })();
