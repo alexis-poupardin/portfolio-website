@@ -41,6 +41,100 @@
         <p>Biodiversity maps</p>
     </div>
     -->
+
+    <div class="map-wrapper">
+            <div class="map-mosaic">
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_EVRON_A2_Coeff_frict.webp" alt="Friction map of the European pine marten in the Evron forest sub-network">
+                    <p class="caption">Land cover classified according to their resistance to movement for the European pine marten</p>
+                </div>
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_EVRON_A2.webp" alt="Habitat modeling map of the European pine marten in the Evron forest sub-network">
+                    <p class="caption">Habitat patches and ecological corridors of the forest sub-network suitable for the European pine marten</p>
+                </div>
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_EVRON_A2_IF.webp" alt="Core habitat modeling map of the European pine marten in the Evron forest sub-network">
+                    <p class="caption">Core habitat patches of the forest sub-network for the European pine marten</p>
+                </div>
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_EVRON_A2_BC.webp" alt="Key habitat modeling map of the European pine marten in the Evron forest sub-network">
+                    <p class="caption">Key forest sub-network habitat patches and corridors for European pine marten movement</p>
+                </div>
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_EVRON_A2_BC_RASTER.webp" alt="Key habitat modeling map of the European pine marten in the Evron forest sub-network (raster format)">
+                    <p class="caption">Key forest sub-network habitat patches and corridors for European pine marten movement (raster format)</p>
+                </div>
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_EVRON_A2_deltaPC.webp" alt="Delta PC map of the European pine marten in the Evron forest sub-network">
+                    <p class="caption">Ranking of forest habitat patches and corridors according to their contribution to European pine marten habitat connectivity</p>
+                </div>
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_EVRON_A2_EC_PATCHES.webp" alt="Potential habitat patches map of the European pine marten in the Evron forest sub-network">
+                    <p class="caption">Potential locations for new forest habitat patches based on their contribution to European pine marten habitat connectivity</p>
+                </div>
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_PAYS_RHENAN_A2_COEF_FRICT.webp" alt="Friction map of the European green tree frog in the Pays Rhénan sub-network">
+                    <p class="caption">Land cover classified according to their resistance to movement for the European green tree frog</p>
+                </div>
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_PAYS_RHENAN_A2_BC.webp" alt="Key habitat modeling map of the European green tree frog in the Pays Rhénan sub-network">
+                    <p class="caption">Wetland sub-network corridors that are key to European green tree frog movements</p>
+                </div>
+
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_PAYS_RHENAN_A2_BC_RASTER.webp" alt="Key habitat modeling map of the European green tree frog in the Pays Rhénan sub-network (raster format)">
+                    <p class="caption">Wetland sub-network corridors that are key to European green tree frog movements (raster format)</p>
+                </div>
+
+
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_PAYS_RHENAN_A2_delta_PC.webp" alt="Delta PC map of the European green tree frog in the Pays Rhénan sub-network">
+                    <p class="caption">Ranking of wetland corridors according to their contribution to European green tree frog habitat connectivity</p>
+                </div>
+
+                <div class="map-tile">
+                    <img class="map" src="./MAPS/BIODIVERSITY/GRAPHAB_PAYS_RHENAN_A2_ADD_PATCHES.webp" alt="Potential habitat patches map of the European green tree frog in the Pays Rhénan sub-network">
+                    <p class="caption">Potential locations for new wetland habitats based on their contribution to European green tree frog habitat connectivity</p>
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+        </div>
+
+
+
+
+
 </section>
 
 
@@ -52,9 +146,21 @@
 
 <!------------------- Link to JS scripts ---------------------->
 
+<div id="map-carousel" class="lightbox">
+    <div class="lightbox-content">
+        <span class="lightbox-close map-carousel-close">&times;</span>
+        <img id="map-carousel-img" src="" alt="">
+
+        <div class="map-carousel-controls">
+            <span class="map-carousel-arrow map-carousel-prev" aria-label="Previous map">&#10094;</span>
+            <p id="map-caption"></p>
+            <span class="map-carousel-arrow map-carousel-next" aria-label="Next map">&#10095;</span>
+        </div>
+    </div>
+</div>
+
 <script src="includes.js"></script>
 <script src="script.js"></script>
-
 
 
 </body>
