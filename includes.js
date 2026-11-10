@@ -64,12 +64,34 @@ async function loadPartials() {
         const langSelect = document.getElementById('language');
         if (langSelect) {
             langSelect.addEventListener('change', (e) => {
-                if (e.target.value) {
-                    // Mark that the user explicitly chose a language,
-                    // so the auto-redirect won't override their choice
-                    sessionStorage.setItem('lang-redirected', '1');
-                    window.location.href = e.target.value;
+                const targetLang = e.target.value;
+                if (!targetLang) return;
+
+                // Mark that the user explicitly chose a language,
+                // so the auto-redirect won't override their choice
+                sessionStorage.setItem('lang-redirected', '1');
+
+                // Work out the current page filename and site root
+                const path = window.location.pathname;
+                const dir = path.substring(0, path.lastIndexOf('/') + 1);
+                const filename = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+
+                // Determine the site root by stripping any /fr/ or /de/ suffix
+                let siteRoot;
+                if (dir.endsWith('/fr/')) {
+                    siteRoot = dir.slice(0, -3);      // remove "fr/"
+                } else if (dir.endsWith('/de/')) {
+                    siteRoot = dir.slice(0, -3);      // remove "de/"
+                } else {
+                    siteRoot = dir;
                 }
+
+                // Build the target URL — same page, different language folder
+                const targetUrl = targetLang === 'en'
+                    ? siteRoot + filename
+                    : siteRoot + targetLang + '/' + filename;
+
+                window.location.href = targetUrl;
             });
         }
 
