@@ -578,15 +578,22 @@ body.homepage header#top {
 }
 @media (max-width: 480px) {
     /* Not enough width beside the compass: stack the text under it */
-   .compass-hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    width: auto;
-}
-.compass-hero-icon { width: 4.5rem; }
-.text-bottom-button { position: static; margin: 0; transform: none; }
+    .compass-hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        width: auto;
+    }
+    .compass-hero-icon { width: 4.5rem; }
+    .text-bottom-button {
+        position: static;
+        margin: 0;
+        transform: none;
+        text-align: center;
+        white-space: normal;
+        max-width: 90vw;
+    }
 }
 
 

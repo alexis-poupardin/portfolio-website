@@ -1,4 +1,4 @@
-// ------------------- lighbox ----------------- // 
+// ------------------- lightbox ----------------- // 
 
 document.addEventListener('DOMContentLoaded', () => {
     const lightbox = document.getElementById('global-lightbox');
@@ -6,6 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxCaption = document.getElementById('lightbox-caption');
     const closeBtn = lightbox.querySelector('.lightbox-close');
+
+    function openLightbox() {
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    }
 
     // Add click event to every image with class "images"
     document.querySelectorAll('.images').forEach(img => {
@@ -27,21 +37,21 @@ document.addEventListener('DOMContentLoaded', () => {
             lightboxCaption.textContent = caption ? caption.textContent : '';
 
             // 4. Display the popup
-            lightbox.classList.add('active');
+            openLightbox();
         });
     });
 
     // Close popup on clicking the 'X' or outside the image container
     lightbox.addEventListener('click', (e) => {
         if (e.target === lightbox || e.target === closeBtn) {
-            lightbox.classList.remove('active');
+            closeLightbox();
         }
     });
 
     // Close popup with Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            lightbox.classList.remove('active');
+        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+            closeLightbox();
         }
     });
 });
@@ -178,6 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMagnifierPosition(clientX, clientY, isTouch);
     }
 
+    function openCarousel() {
+        carousel.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCarousel() {
+        deactivateMagnifier();
+        carousel.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
     function deactivateMagnifier() {
         if (!isMagnifierActive) return;
         isMagnifierActive = false;
@@ -192,7 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isMagnifierActive) {
                 deactivateMagnifier();
             } else {
-                activateMagnifier(e.clientX, e.clientY, e.pointerType === 'touch');
+                const isTouch = e.pointerType === 'touch' || window.matchMedia('(pointer: coarse)').matches;
+                activateMagnifier(e.clientX, e.clientY, isTouch);
             }
         });
 
@@ -292,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tile.addEventListener('click', () => {
                 currentTiles = tiles;              // this wrapper's mosaic order
                 showSlide(tiles.indexOf(tile));    // open on the clicked tile
-                carousel.classList.add('active');
+                openCarousel();
             });
         });
     });
@@ -311,8 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close popup on clicking the 'X' or outside the image container
     carousel.addEventListener('click', (e) => {
         if (e.target === carousel || e.target === closeBtn) {
-            deactivateMagnifier();
-            carousel.classList.remove('active');
+            closeCarousel();
         } else if (isMagnifierActive && e.target !== carouselImg) {
             deactivateMagnifier();
         }
@@ -326,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isMagnifierActive) {
                 deactivateMagnifier();
             } else {
-                carousel.classList.remove('active');
+                closeCarousel();
             }
         } else if (e.key === 'ArrowLeft') {
             showSlide(currentIndex - 1);
@@ -336,20 +357,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Touch swipe, so mobile visitors can browse with a finger when magnifier is not active.
-    let touchStartX = 0;
-    let touchStartY = 0;
+    let touchStartX = null;
+    let touchStartY = null;
 
     carousel.addEventListener('touchstart', (e) => {
         if (isMagnifierActive) return;
-        touchStartX = e.changedTouches[0].clientX;
-        touchStartY = e.changedTouches[0].clientY;
-    });
+        const touch = e.changedTouches[0];
+        if (!touch) return;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+    }, { passive: true });
 
     carousel.addEventListener('touchend', (e) => {
-        if (isMagnifierActive) return;
-        const deltaX = e.changedTouches[0].clientX - touchStartX;
-        const deltaY = e.changedTouches[0].clientY - touchStartY;
+        if (isMagnifierActive || touchStartX === null || touchStartY === null) return;
+        const touch = e.changedTouches[0];
+        if (!touch) return;
+
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
         const swipeThreshold = 40; // minimum px to count as an intentional swipe
+
+        touchStartX = null;
+        touchStartY = null;
 
         if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
             if (deltaX > 0) {
@@ -358,62 +387,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showSlide(currentIndex + 1); // swiped left -> next
             }
         }
-    });
+    }, { passive: true });
 });
 
 
 
 
 
-// ---------------- autoscrolling to <section class="article-section"> ------------- //
 
-// The auto-scroll is switched off on mobile devices (small screens or touch-only devices).
-// Edit this media query to change what counts as "mobile".
-const MOBILE_QUERY = '(max-width: 600px), (hover: none) and (pointer: coarse)';
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.matchMedia(MOBILE_QUERY).matches) return;   // mobile: no auto-scroll
-
-    const targetSection = document.querySelector('.article-section');
-
-    if (targetSection) {
-        setTimeout(() => {
-            // Change duration in milliseconds to adjust speed (e.g., 1500 = 1.5 seconds)
-            smoothScrollTo(targetSection, 1500); 
-        }, 400);
-    }
-});
-
-// Custom function to control scroll duration and speed
-function smoothScrollTo(element, duration = 1000) {
-    const navbarHeight = 110; // Match your scroll-margin-top
-    const targetPosition = element.getBoundingClientRect().top + window.scrollY - navbarHeight;
-    const startPosition = window.scrollY;
-    const distance = targetPosition - startPosition;
-    let startTime = null;
-
-    // Easing function for smooth acceleration and deceleration (easeInOutQuad)
-    function easeInOutQuad(t, b, c, d) {
-        t /= d / 2;
-        if (t < 1) return (c / 2) * t * t + b;
-        t--;
-        return (-c / 2) * (t * (t - 2) - 1) + b;
-    }
-
-    function animation(currentTime) {
-        if (startTime === null) startTime = currentTime;
-        const timeElapsed = currentTime - startTime;
-        const run = easeInOutQuad(timeElapsed, startPosition, distance, duration);
-        
-        window.scrollTo(0, run);
-
-        if (timeElapsed < duration) {
-            requestAnimationFrame(animation);
-        }
-    }
-
-    requestAnimationFrame(animation);
-}
 
 
 
@@ -523,39 +504,50 @@ function updateMobileNav() {
     }
 
     function forcedTheme(element) {
+        if (!element || typeof element.closest !== 'function') return null;
         const source = element.closest('[data-ui-theme], [data-nav-theme]');
-        return source?.dataset.uiTheme || source?.dataset.navTheme || null;
+        if (!source) return null;
+        return source.dataset?.uiTheme || source.getAttribute?.('data-ui-theme') ||
+               source.dataset?.navTheme || source.getAttribute?.('data-nav-theme') || null;
     }
 
     function isDarkBehind(root, probe) {
-        const box = probe.getBoundingClientRect();
-        if (!box.width || !box.height) return false;
+        try {
+            const box = probe.getBoundingClientRect();
+            if (!box.width || !box.height) return false;
 
-        // If the element is scrolled completely off-screen, maintain its current contrast state
-        if (box.bottom < 0 || box.top > window.innerHeight || box.right < 0 || box.left > window.innerWidth) {
+            // If the element is scrolled completely off-screen, maintain its current contrast state
+            if (box.bottom < 0 || box.top > window.innerHeight || box.right < 0 || box.left > window.innerWidth) {
+                return root.classList.contains(DARK_CLASS);
+            }
+
+            const x = Math.max(0, Math.min(box.left + box.width / 2, window.innerWidth - 1));
+            const y = Math.max(0, Math.min(box.top + box.height / 2, window.innerHeight - 1));
+
+            const elements = (typeof document.elementsFromPoint === 'function')
+                ? document.elementsFromPoint(x, y)
+                : (document.elementFromPoint(x, y) ? [document.elementFromPoint(x, y)] : []);
+
+            for (const el of elements) {
+                if (!el || root.contains(el)) continue;
+
+                const forced = forcedTheme(el);
+                if (forced === 'dark' || forced === 'light') return forced === 'dark';
+
+                if (el instanceof HTMLImageElement) {
+                    const value = imageBrightness(el, x, y);
+                    if (value !== null) return value < BRIGHTNESS_LIMIT;
+                }
+
+                const color = parseColor(getComputedStyle(el).backgroundColor);
+                if (color && color.a >= MIN_OPACITY) {
+                    return brightness(color) < BRIGHTNESS_LIMIT;
+                }
+            }
+            return false;                                      // nothing found: the page background is light
+        } catch {
             return root.classList.contains(DARK_CLASS);
         }
-
-        const x = Math.max(0, Math.min(box.left + box.width / 2, window.innerWidth - 1));
-        const y = Math.max(0, Math.min(box.top + box.height / 2, window.innerHeight - 1));
-
-        for (const el of document.elementsFromPoint(x, y)) {
-            if (root.contains(el)) continue;
-
-            const forced = forcedTheme(el);
-            if (forced === 'dark' || forced === 'light') return forced === 'dark';
-
-            if (el instanceof HTMLImageElement) {
-                const value = imageBrightness(el, x, y);
-                if (value !== null) return value < BRIGHTNESS_LIMIT;
-            }
-
-            const color = parseColor(getComputedStyle(el).backgroundColor);
-            if (color && color.a >= MIN_OPACITY) {
-                return brightness(color) < BRIGHTNESS_LIMIT;
-            }
-        }
-        return false;                                      // nothing found: the page background is light
     }
 
     function update() {
@@ -573,9 +565,12 @@ function updateMobileNav() {
         if (ticking) return;
         ticking = true;
         requestAnimationFrame(() => {
-            updateMobileNav();
-            update();
-            ticking = false;
+            try {
+                updateMobileNav();
+                update();
+            } finally {
+                ticking = false;
+            }
         });
     }
 

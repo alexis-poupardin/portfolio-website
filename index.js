@@ -444,8 +444,8 @@ function carouselUnfoldingMap() {
     }
 
     // Native touch swipe handling for mobile devices (iOS, iPadOS, Android)
-    let touchStartX = 0;
-    let touchStartY = 0;
+    let touchStartX = null;
+    let touchStartY = null;
     let touchDeltaX = 0;
     let touchDeltaY = 0;
 
@@ -461,7 +461,7 @@ function carouselUnfoldingMap() {
     }, { passive: true });
 
     carousel.addEventListener('touchmove', (event) => {
-        if (!touchStartX) return;
+        if (touchStartX === null) return;
         const touch = event.touches[0];
         if (!touch) return;
         touchDeltaX = touch.clientX - touchStartX;
@@ -469,11 +469,11 @@ function carouselUnfoldingMap() {
     }, { passive: true });
 
     carousel.addEventListener('touchend', () => {
-        if (!touchStartX) return;
+        if (touchStartX === null) return;
         const distX = touchDeltaX;
         const distY = touchDeltaY;
-        touchStartX = 0;
-        touchStartY = 0;
+        touchStartX = null;
+        touchStartY = null;
         touchDeltaX = 0;
         touchDeltaY = 0;
 
