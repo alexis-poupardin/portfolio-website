@@ -65,6 +65,9 @@ async function loadPartials() {
         if (langSelect) {
             langSelect.addEventListener('change', (e) => {
                 if (e.target.value) {
+                    // Mark that the user explicitly chose a language,
+                    // so the auto-redirect won't override their choice
+                    sessionStorage.setItem('lang-redirected', '1');
                     window.location.href = e.target.value;
                 }
             });
