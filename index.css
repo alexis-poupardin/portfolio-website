@@ -1,4 +1,5 @@
-/* ---------- 1. Settings: tweak the design from here ---------- */
+/* ROOT VARIABLES */
+
 :root {
     --hero-overlay-opacity: 30%; /* light overlay on the hero image: 0% = none, 100% = solid */
 
@@ -17,58 +18,49 @@
     --hero-rise: 3rem;           /* how far below its final place each one starts */
     --hero-start-scale: 0.85;    /* size at the start (1 = no zoom, only the rise) */
     --delay-hero-title: 0.3s;    /* the title starts first... */
-    --delay-hero-text: 0.5s;     /* ...the text 1 s later (title start + 1 s). For "text only
-                                    once the title is finished", use calc(var(--delay-hero-title) + var(--hero-duration)) */
+    --delay-hero-text: 0.5s;     /* ...the text 1 s later (title start + 1 s) */
 
-    /* Everything else waits until the hero text is fully displayed, then keeps the same order as before */
+    /* Staggered delays for subsequent elements */
     --delay-after-hero: calc(var(--delay-hero-text) + var(--hero-duration));
-    --delay-logo: var(--delay-after-hero);                     /* staggered entrance... */
+    --delay-logo: var(--delay-after-hero);
     --delay-headings: calc(var(--delay-after-hero) + 0.4s);
-    --delay-nav: calc(var(--delay-after-hero) + 0.9s);         /* ...nav, language switch AND bottom arrow together */
-    --delay-compass-anim: calc(var(--delay-nav) + var(--appear-duration)); /* compass internals wait until every entrance animation is done */
+    --delay-nav: calc(var(--delay-after-hero) + 0.9s);
+    --delay-compass-anim: calc(var(--delay-nav) + var(--appear-duration));
 
     --map-tilt: 3deg;            /* unfolding map: tilt of the folded map (straightens while it opens) */
     --map-skew: 1deg;            /* unfolding map: slight skew of the two outer panels while folded */
     --map-radius: 0.35rem;       /* unfolding map: rounded corners of the open map */
-    /* Durations (2 s unfolding, 1.5 s before the borders vanish...) are set at the top of index.js */
 
     --needle-opacity: 90%;   /* transparency of needle_1 and needle_2 */
 }
 
 
-/* ---------- 2. Entrance animations ---------- */
+/* ENTRANCE ANIMATIONS */
+
 @keyframes appear {
     from { opacity: 0; transform: translateY(-0.75rem); }
     to   { opacity: 1; transform: none; }
 }
-@keyframes fade-in {             /* opacity only: the arrow already uses `translate` to centre itself */
+
+@keyframes fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
 }
-/* Hero title + text: fade in while rising from below and growing slightly (CSS-only version of
-   the Framer Motion "hidden -> visible" variants: opacity 0 -> 1 and y 20 -> 0) */
+
 @keyframes zoom-in-from-below {
     from { opacity: 0; transform: translateY(var(--hero-rise)) scale(var(--hero-start-scale)); }
     to   { opacity: 1; transform: none; }
 }
 
-/* `backwards` keeps each element hidden during its delay, then lets go of it once the
-   animation is over. (With `both` the nav would stay "animated" forever, and the blur of its
-   glass layer and of its sub menu would silently stop working.) */
 body.homepage .logo-HB,
 body.homepage .main-headings,
 body.homepage .motto,
 body.homepage .language-switcher,
 body.homepage .navigation > nav > ul::before,
 body.homepage .navigation > nav > ul > li {
-        animation: appear var(--appear-duration) var(--ease-smooth) backwards;
+    animation: appear var(--appear-duration) var(--ease-smooth) backwards;
 }
 
-/* NAV BAR: the entrance is NOT played on the <ul> itself. An element with opacity < 1 (even
-   during an animation) becomes a "backdrop root": the backdrop-filter of its glass layer then
-   only sees what is inside the <ul> (nothing) and the blur is missing until the animation ends.
-   So the glass layer (::before, which carries its own blur) and the links (<li>) fade in
-   separately: the glass is blurred from the very first frame. */
 body.homepage .logo-HB                 { animation-delay: var(--delay-logo); }
 body.homepage .main-headings           { animation-delay: var(--delay-headings); }
 body.homepage .motto                   { animation-delay: calc(var(--delay-headings) + 0.15s); }
@@ -76,17 +68,17 @@ body.homepage .language-switcher,
 body.homepage .navigation > nav > ul::before,
 body.homepage .navigation > nav > ul > li { animation-delay: var(--delay-nav); }
 
-/* Hero title, then hero text. They play on page load (not on scroll): a CSS animation starts
-   by itself as soon as the element is rendered. `backwards` keeps them hidden during their delay. */
 body.homepage #hero-title,
 body.homepage .home-hero-text {
     animation: zoom-in-from-below var(--hero-duration) var(--ease-smooth) backwards;
 }
+
 body.homepage #hero-title        { animation-delay: var(--delay-hero-title); }
 body.homepage .home-hero-text    { animation-delay: var(--delay-hero-text); }
 
 
-/* ---------- 3. Header over the hero ---------- */
+/* HERO HEADER */
+
 body.homepage header#top {
     position: absolute;
     top: var(--header-top);
@@ -96,64 +88,57 @@ body.homepage header#top {
     padding: 0;
     margin: 0;
     scroll-margin-top: var(--header-top);
+    --logo-color: var(--hero-logo-color);
 }
 
-/* Colours of the logo, title and motto on the homepage: they come from the --hero-* variables
-   in section 1 */
 body.homepage .main-headings .title {
     color: var(--hero-header-title-color);
 }
+
 body.homepage .motto {
     color: var(--hero-motto-color);
 }
 
-/* The logo is an inline <svg> styled in common.css (fill: var(--logo-color)):
-   on the homepage it only needs another value for that variable */
-body.homepage header#top {
-    --logo-color: var(--hero-logo-color);
-}
 
+/* HERO SECTION */
 
-/* ---------- 4. Section 1: hero (full screen) ---------- */
-/* common.css gives <main> padding and centres its children: reset it for the full-bleed sections */
 .homepage-main {
     width: 100%;
     padding: 0;
     align-items: stretch;
 }
+
 .hero-section {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    min-height: 100svh;          /* accounts for mobile browser bars */
-    padding: 7rem 1.5rem 6.5rem; /* keeps text clear of the header (top) and the arrow (bottom) */
+    min-height: 100svh;
+    padding: 7rem 1.5rem 6.5rem;
     overflow: hidden;
-    background: #000;            /* shown while the image loads */
+    background: #000;
     color: var(--color-ivory);
 }
+
 .hero-image {
     position: absolute;
     inset: 0;
     z-index: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;           /* fills the screen without distortion */
+    object-fit: cover;
 }
 
-/* Light warm overlay on the hero image (same colour as --color-bg, opacity set in section 1).
-   An <img> cannot hold an overlay itself, so the section's ::before layer sits right above it. */
 .hero-section::before {
     content: "";
     position: absolute;
     inset: 0;
-    z-index: 1;                  /* above the image (0); the dark gradient below (::after) comes later, so it stays on top */
+    z-index: 1;
     pointer-events: none;
     background: color-mix(in srgb, var(--color-bg) var(--hero-overlay-opacity), transparent);
 }
 
-/* Soft dark gradient: keeps header text and arrow readable */
 .hero-section::after {
     content: "";
     position: absolute;
@@ -165,25 +150,27 @@ body.homepage header#top {
 
 .home-hero {
     position: relative;
-    z-index: 2;                  /* above the image and the gradient */
+    z-index: 2;
     max-width: 760px;
     text-align: center;
 }
+
 .home-hero h1 {
     margin: 0.4rem 0 1rem;
     font-size: clamp(1.9rem, 6vw, 4.5rem);
     line-height: 1.05;
     letter-spacing: -0.04em;
-    text-wrap: balance;          /* avoids one lonely word on the last line */
+    text-wrap: balance;
 }
 
-/* Colours come from the --hero-* variables in section 1 (no more .is-on-dark switch) */
 #hero-title {
     color: var(--hero-title-color);
 }
+
 .home-hero-text {
     color: var(--hero-text-color);
 }
+
 #hero-title,
 .home-hero-text {
     text-shadow: var(--hero-text-shadow);
@@ -196,7 +183,8 @@ body.homepage header#top {
 }
 
 
-/* ---------- 5. Scroll compass (bottom middle of the hero) ---------- */
+/* SCROLL COMPASS */
+
 .compass-hero {
     position: absolute;
     left: 50%;
@@ -217,24 +205,29 @@ body.homepage header#top {
     overflow: visible;
     transition: transform 0.25s var(--ease-smooth);
 }
+
 @media (hover: hover) {
     .compass-hero-icon:hover {
         transform: translateY(0.35rem);
     }
 }
+
 .compass-hero .outer-circle,
 .compass-hero .inner-dot {
     fill: none;
     stroke: #fefcf6;
 }
+
 .compass-hero .inner-dot {
     fill: #fefcf6;
 }
+
 .compass-hero .small-compass-star,
 .compass-hero .big-compass-star {
     fill: #fefcf6;
     stroke: none;
 }
+
 .compass-hero .needle-1,
 .compass-hero .needle-2 {
     opacity: var(--needle-opacity);
@@ -243,8 +236,10 @@ body.homepage header#top {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
 .compass-hero .needle-1 { fill: #283138; }
 .compass-hero .needle-2 { fill: #fefcf6; }
+
 .compass-hero .motion-left,
 .compass-hero .motion-right,
 .compass-hero .motion-middle {
@@ -252,33 +247,33 @@ body.homepage header#top {
     stroke: none;
 }
 
-/* Needles turn around inner_dot (cx 404.57, cy 404.57). 10s loop. */
 .compass-hero .compass-needles {
     transform-box: view-box;
     transform-origin: 404.56732px 404.56744px;
     animation: compass-point-down 10s ease-in-out var(--delay-compass-anim) infinite both;
 }
+
 @keyframes compass-point-down {
     0%                { transform: rotate(0deg); }
-    30%, 80%          { transform: rotate(180.75deg); } /* 3s down, hold until 8s */
-    100%              { transform: rotate(0deg); }      /* 8–10s: return */
+    30%, 80%          { transform: rotate(180.75deg); }
+    100%              { transform: rotate(0deg); }
 }
 
-/* Fade only: hidden → in (1s) → out (1s) before the loop restarts. */
 .compass-hero .compass-motion {
     opacity: 0;
     animation: compass-motion-fade 10s ease-in-out var(--delay-compass-anim) infinite both;
 }
+
 @keyframes compass-motion-fade {
-    0%, 30%  { opacity: 0; }   /* 0–3s: hidden while the needle turns */
-    40%, 80% { opacity: 1; }   /* 4s: faded in; stay until return starts */
-    90%, 100% { opacity: 0; }  /* 8–9s: fade out, already gone at restart */
+    0%, 30%  { opacity: 0; }
+    40%, 80% { opacity: 1; }
+    90%, 100% { opacity: 0; }
 }
 
-/* Three visible up-and-down bumps (5–8s). */
 .compass-hero .compass-motion-bump {
     animation: compass-motion-bump 10s linear var(--delay-compass-anim) infinite both;
 }
+
 @keyframes compass-motion-bump {
     0%, 50%   { transform: translateY(0); }
     53%       { transform: translateY(-1.35rem); }
@@ -303,7 +298,8 @@ body.homepage header#top {
 }
 
 
-/* ---------- 6. Section 2: unfolding-map carousel + footer (full screen) ---------- */
+/* HOMEPAGE CAROUSEL */
+
 .lower-section {
     display: flex;
     flex-direction: column;
@@ -311,11 +307,9 @@ body.homepage header#top {
     min-height: 100svh;
     background: var(--color-bg);
 }
-/* Footer: unchanged. Its margin-top: auto (common.css) pins it to the bottom of this screen */
 
 .homepage-carousel {
-    --arrow-space: clamp(3rem, 7vw, 5.5rem);   /* width kept free on each side for the arrows */
-    /* The map never gets wider than the space between the two arrows (1rem = safety for scrollbars) */
+    --arrow-space: clamp(3rem, 7vw, 5.5rem);
     --display-width: min(calc(100vw - 2 * var(--arrow-space) - 1rem), 65rem);
     --display-height: clamp(28rem, 64vh, 47rem);
 
@@ -323,21 +317,22 @@ body.homepage header#top {
     width: min(100%, 96rem);
     margin: clamp(7rem, 13vh, 10rem) auto 1.25rem;
     overflow-x: hidden;
-    overflow-x: clip;            /* no sideways scroll, but shadows can still go up and down */
+    overflow-x: clip;
     isolation: isolate;
-    touch-action: pan-y;         /* horizontal swipes belong to the carousel, vertical ones scroll the page */
+    touch-action: pan-y;
 }
 
-/* The stage: all the maps are stacked here, only the active one is visible */
 .carousel-viewport {
     position: relative;
     height: var(--display-height);
     overflow: hidden;
 }
+
 .carousel-track {
     position: relative;
     height: 100%;
 }
+
 .carousel-slide {
     position: absolute;
     inset: 0;
@@ -346,12 +341,12 @@ body.homepage header#top {
     visibility: hidden;
     pointer-events: none;
 }
+
 .carousel-slide.is-active {
     visibility: visible;
     pointer-events: auto;
 }
 
-/* The frame takes exactly the size of its image (the <img> inside gives the size) */
 .carousel-image-frame {
     position: relative;
     display: block;
@@ -370,25 +365,21 @@ body.homepage header#top {
 }
 
 
-/* ----- Folding map (only when index.js has built the panels: .is-enhanced) -----
-   index.js animates ONE number per map, --unfold (0 = folded, 1 = open).
-   Everything below is computed from it, like the xDrag value of the Framer Motion version. */
-.is-enhanced .carousel-image-frame {
-    --unfold: 0;                                                   /* overwritten by index.js */
-    --fold: calc(1 - var(--unfold));                               /* 1 = folded, 0 = open */
-    --centre: clamp(0, calc((var(--unfold) - 0.5) * 2), 1);        /* centre panel: appears during the 2nd half */
+/* FOLDING MAP ANIMATION */
 
-    /* Folded map: tilted and slightly smaller; it straightens and grows while unfolding */
+.is-enhanced .carousel-image-frame {
+    --unfold: 0;
+    --fold: calc(1 - var(--unfold));
+    --centre: clamp(0, calc((var(--unfold) - 0.5) * 2), 1);
+
     transform: rotate(calc(var(--fold) * var(--map-tilt)))
                scale(calc(0.9 + 0.1 * var(--unfold)));
 }
 
-/* The <img> stays in place (it gives the frame its size) but is invisible while the panels are shown */
 .is-enhanced .carousel-slide:not(.is-settled) .map-source {
     opacity: 0;
 }
 
-/* Drop shadow around the finished map: fades in when the fold effects fade out */
 .carousel-image-frame::before {
     content: "";
     position: absolute;
@@ -399,11 +390,11 @@ body.homepage header#top {
     opacity: 0;
     transition: opacity var(--borders-fade, 600ms) ease;
 }
+
 .carousel-slide.is-borderless .carousel-image-frame::before {
     opacity: 1;
 }
 
-/* The 3 panels sit on top of each other, side by side in a 3-column grid */
 .map-panels {
     position: absolute;
     inset: 0;
@@ -411,7 +402,6 @@ body.homepage header#top {
     grid-template-columns: repeat(3, 1fr);
 }
 
-/* Each panel shows one third of the image: 300% wide, then moved to the left / centre / right */
 .map-panel {
     position: relative;
     background-image: var(--map-image);
@@ -422,7 +412,6 @@ body.homepage header#top {
                 box-shadow var(--borders-fade, 600ms) ease;
 }
 
-/* Crease shading on the left edge of each panel (the 90deg gradient of the original) */
 .map-panel::before {
     content: "";
     position: absolute;
@@ -432,57 +421,55 @@ body.homepage header#top {
     transition: opacity var(--borders-fade, 600ms) ease;
 }
 
-/* Left panel: slides in from the centre column to the left */
 .map-panel--left {
     background-position: 0% 0;
     transform-origin: bottom right;
     transform: translateX(calc(var(--fold) * 100%))
                skewY(calc(var(--fold) * var(--map-skew) * -1));
-    border-right: 1px solid rgb(255 255 255 / 0.1);          /* thin border */
+    border-right: 1px solid rgb(255 255 255 / 0.1);
     border-radius: var(--map-radius) 0 0 var(--map-radius);
 }
 
-/* Right panel: slides in from the centre column to the right */
 .map-panel--right {
     background-position: 100% 0;
     transform-origin: bottom left;
     transform: translateX(calc(var(--fold) * -100%))
                skewY(calc(var(--fold) * var(--map-skew)));
-    border-left: 1px solid rgb(255 255 255 / 0.1);           /* thin border */
+    border-left: 1px solid rgb(255 255 255 / 0.1);
     border-radius: 0 var(--map-radius) var(--map-radius) 0;
 }
 
 .map-panel--left,
 .map-panel--right {
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);         /* thin shadow */
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
 }
 
-/* Centre panel: grows from nothing in the 2nd half of the unfolding, and gets brighter */
 .map-panel--center {
     background-position: 50% 0;
     transform: scaleX(var(--centre));
     filter: brightness(calc(0.2 + 0.8 * var(--centre)));
 }
 
-/* 1.5 s after the unfolding: borders, shadows and crease shading fade away (index.js adds .is-borderless) */
 .carousel-slide.is-borderless .map-panel {
     border-color: transparent;
 }
+
 .carousel-slide.is-borderless .map-panel--left,
 .carousel-slide.is-borderless .map-panel--right {
     box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0);
 }
+
 .carousel-slide.is-borderless .map-panel::before {
     opacity: 0;
 }
 
-/* Then (.is-settled) the three panels give way to the plain image: nothing is left over it */
 .carousel-slide.is-settled .map-panels {
     visibility: hidden;
 }
 
 
-/* ----- Arrows: in the free space left and right of the map, never over it ----- */
+/* CAROUSEL CONTROLS */
+
 .carousel-control {
     position: absolute;
     top: 0;
@@ -511,7 +498,6 @@ body.homepage header#top {
     transition: transform 0.25s var(--ease-smooth);
 }
 
-
 @media (hover: hover) {
     .carousel-control--previous:hover span { transform: translateX(-0.4rem); }
     .carousel-control--next:hover span { transform: translateX(0.4rem); }
@@ -524,7 +510,8 @@ body.homepage header#top {
 }
 
 
-/* ----- Dots: in the flow, under the map ----- */
+/* CAROUSEL DOTS */
+
 .carousel-dots {
     position: relative;
     z-index: 5;
@@ -558,7 +545,8 @@ body.homepage header#top {
 }
 
 
-/* ---------- 7. Tablets and phones ---------- */
+/* RESPONSIVE */
+
 @media (max-width: 960px) {
     .hero-section { padding-top: 11rem; }
 
@@ -566,18 +554,18 @@ body.homepage header#top {
         --display-height: clamp(26rem, 60svh, 38rem);
         margin-top: 8.5rem;
     }
-
 }
+
 @media (max-width: 600px) {
-    .hero-section { padding-top: 13rem; padding-bottom: 6rem; }   /* the nav can wrap onto 2 rows */
+    .hero-section { padding-top: 13rem; padding-bottom: 6rem; }
 
     .homepage-carousel {
         --display-height: clamp(21rem, 52svh, 30rem);
         margin-top: 13rem;
     }
 }
+
 @media (max-width: 480px) {
-    /* Not enough width beside the compass: stack the text under it */
     .compass-hero {
         display: flex;
         flex-direction: column;
@@ -585,7 +573,9 @@ body.homepage header#top {
         gap: 0.5rem;
         width: auto;
     }
+
     .compass-hero-icon { width: 4.5rem; }
+
     .text-bottom-button {
         position: static;
         margin: 0;
@@ -597,15 +587,14 @@ body.homepage header#top {
 }
 
 
-/* ---------- 10. Respect the "reduce motion" system setting ---------- */
-/* (The unfolding map handles it in index.js: with this setting, maps open instantly.) */
+/* REDUCED MOTION */
+
 @media (prefers-reduced-motion: reduce) {
     .compass-hero { animation: none !important; }
     .compass-hero .compass-needles { animation: none !important; }
     .compass-hero .compass-motion { animation: none !important; opacity: 0; }
     .compass-hero .compass-motion-bump { animation: none !important; }
 
-    /* Hero title + text: no rise or zoom, a simple fade instead (same delays, so the order is kept) */
     body.homepage #hero-title,
     body.homepage .home-hero-text { animation-name: fade-in; }
 }
