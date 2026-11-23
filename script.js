@@ -134,9 +134,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const rect = carouselImg.getBoundingClientRect();
         if (!rect.width || !rect.height) return;
 
-        // Position clamped to image bounds
-        const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-        const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+        // Account for any letterboxing/pillarboxing inside the <img> element
+        let imgW = rect.width;
+        let imgH = rect.height;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (carouselImg.naturalWidth && carouselImg.naturalHeight) {
+            const naturalRatio = carouselImg.naturalWidth / carouselImg.naturalHeight;
+            const elementRatio = rect.width / rect.height;
+
+            if (elementRatio > naturalRatio) {
+                // Pillarboxed (empty space on left/right)
+                imgW = rect.height * naturalRatio;
+                imgH = rect.height;
+                offsetX = (rect.width - imgW) / 2;
+            } else if (elementRatio < naturalRatio) {
+                // Letterboxed (empty space on top/bottom)
+                imgW = rect.width;
+                imgH = rect.width / naturalRatio;
+                offsetY = (rect.height - imgH) / 2;
+            }
+        }
+
+        // Position clamped to the actual image bounds
+        const x = Math.max(0, Math.min(clientX - rect.left - offsetX, imgW));
+        const y = Math.max(0, Math.min(clientY - rect.top - offsetY, imgH));
 
         const glassSize = Math.min(
             TARGET_SIZE,
@@ -170,8 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
         magnifier.style.top = `${glassTop}px`;
 
         // Background size and position for 2.5x magnification
-        const bgW = rect.width * ZOOM_FACTOR;
-        const bgH = rect.height * ZOOM_FACTOR;
+        const bgW = imgW * ZOOM_FACTOR;
+        const bgH = imgH * ZOOM_FACTOR;
 
         const bgX = -(x * ZOOM_FACTOR - glassRadius);
         const bgY = -(y * ZOOM_FACTOR - glassRadius);
